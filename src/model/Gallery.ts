@@ -1,0 +1,39 @@
+import mongoose from "mongoose";
+
+export interface IGalleryImage extends mongoose.Document {
+  filename?: string | null;
+  data?: Buffer | null;
+  contentType?: string | null;
+  size?: number | null;
+  tags?: string | null;
+  url?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const GalleryImageSchema = new mongoose.Schema<IGalleryImage>(
+  {
+    filename: { type: String },
+    data: { type: Buffer },
+    contentType: { type: String },
+    size: { type: Number },
+    tags: { type: String },
+    url: { type: String, index: true },
+  },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  },
+);
+
+GalleryImageSchema.virtual("dataURI").get(function (this: IGalleryImage) {
+  if (this.data && this.contentType) {
+    return `data:${this.contentType};base64,${this.data.toString("base64")}`;
+  }
+  return null;
+});
+
+export const GalleryImage =
+  mongoose.models.GalleryImage ||
+  mongoose.model<IGalleryImage>("GalleryImage", GalleryImageSchema);
