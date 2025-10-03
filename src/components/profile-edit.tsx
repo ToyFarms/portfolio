@@ -68,21 +68,24 @@ export default function ProfileEditPage({ session }: { session: Session }) {
         );
       }
 
-      const updatedUser = (await res.json()).user;
-      session.user.name = updatedUser.name ?? session.user.name;
-      session.user.email = updatedUser.email ?? session.user.email;
-      session.user.image = updatedUser.image ?? session.user.image;
-      session.user.role = updatedUser.role ?? session.user.role;
-
       if (changingPassword) {
         setSuccessMessage("Password changed — signing out...");
-        await fetch("/api/logout");
+        await fetch("/api/auth/signout", { method: "POST" });
         router.push("/login");
         return;
       }
 
-      setSuccessMessage("Profile updated successfully!");
-      router.refresh();
+      try {
+        await fetch("/api/auth/refresh", { method: "POST" });
+        setSuccessMessage("Profile updated successfully!");
+        router.refresh();
+      } catch (refreshError) {
+        console.error("Session refresh failed:", refreshError);
+        setSuccessMessage(
+          "Profile updated successfully! Please refresh the page to see changes.",
+        );
+        router.refresh();
+      }
     } catch (e) {
       setServerError((e as Error).message || "Unexpected error");
     }

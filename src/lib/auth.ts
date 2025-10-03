@@ -41,17 +41,36 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  session: { strategy: "jwt" },
-  jwt: {},
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60,
+    updateAge: 24 * 60 * 60,
+  },
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60,
+  },
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    async jwt({ token, user }: { token: JWT; user?: any }) {
+    async jwt({
+      token,
+      user,
+      trigger,
+    }: {
+      token: JWT;
+      user?: any;
+      trigger?: string;
+    }) {
       if (user) {
-        token.role = user.role || "user";
-        token.userId = user.id?.toString();
-        token.image = user.image;
-        token.tokenVersion = user.tokenVersion ?? 0;
-        return token;
+        return {
+          ...token,
+          userId: user.id?.toString(),
+          email: user.email,
+          name: user.name,
+          image: user.image,
+          role: user.role || "user",
+          tokenVersion: user.tokenVersion ?? 0,
+          iat: Math.floor(Date.now() / 1000),
+        };
       }
 
       if (token.userId) {
@@ -63,7 +82,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         if ((dbUser.tokenVersion ?? 0) !== (token.tokenVersion ?? 0)) {
-          return { ...token, revoked: true };
+          return {
+            ...token,
+            email: dbUser.email,
+            name: dbUser.name,
+            image: dbUser.image,
+            role: dbUser.role || "user",
+            tokenVersion: dbUser.tokenVersion ?? 0,
+            iat: Math.floor(Date.now() / 1000),
+          };
+        }
+
+        if (trigger === "update") {
+          return {
+            ...token,
+            email: dbUser.email,
+            name: dbUser.name,
+            image: dbUser.image,
+            role: dbUser.role || "user",
+            tokenVersion: dbUser.tokenVersion ?? 0,
+            iat: Math.floor(Date.now() / 1000),
+          };
         }
       }
 
@@ -72,13 +111,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
     async session({ session, token }: { session: Session; token: JWT }) {
       if (token && (token as any).revoked) {
-        return { ...session } as unknown as Session;
+        return null as any;
       }
 
       session.user = session.user || ({} as any);
+      session.user.id = token.userId as string;
+      session.user.email = token.email as string;
+      session.user.name = token.name as string;
+      session.user.image = token.image as string;
       session.user.role = token.role as any;
-      session.user.image = token.image as any;
-      session.user.id = token.userId as string | undefined;
 
       return session;
     },

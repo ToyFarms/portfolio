@@ -42,12 +42,17 @@ export async function PUT(req: Request) {
   }
 
   const update: Partial<IUser> & Partial<UserUpdate> = {};
+  let hasChanges = false;
 
-  console.log(data)
-  if (typeof data.name !== "undefined") update.name = data.name;
-  if (typeof data.image !== "undefined")
+  if (typeof data.name !== "undefined" && data.name !== user.name) {
+    update.name = data.name;
+    hasChanges = true;
+  }
+
+  if (typeof data.image !== "undefined" && data.image !== user.image) {
     update.image = data.image === "" ? undefined : data.image;
-  console.log("then", data)
+    hasChanges = true;
+  }
 
   if (data.newPassword) {
     if (!data.currentPassword) {
@@ -66,7 +71,7 @@ export async function PUT(req: Request) {
     }
 
     update.passwordHash = await bcrypt.hash(data.newPassword, 10);
-    update.tokenVersion = (update.tokenVersion ?? user.tokenVersion ?? 0) + 1;
+    hasChanges = true;
   }
 
   if (data.email && data.email !== user.email) {
@@ -86,7 +91,10 @@ export async function PUT(req: Request) {
     }
 
     const existing = await User.findOne({ email: data.email });
-    if (existing && existing._id.toString() !== user._id.toString()) {
+    if (
+      existing &&
+      (existing._id as any).toString() !== (user._id as any).toString()
+    ) {
       return NextResponse.json(
         { error: "Email already in use" },
         { status: 409 },
@@ -94,6 +102,11 @@ export async function PUT(req: Request) {
     }
 
     update.email = data.email;
+    hasChanges = true;
+  }
+
+  if (hasChanges) {
+    update.tokenVersion = (user.tokenVersion ?? 0) + 1;
   }
 
   try {
