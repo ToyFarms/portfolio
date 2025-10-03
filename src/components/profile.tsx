@@ -1,9 +1,11 @@
-import { auth } from "@/lib/auth";
+"use client";
+
+import { useSession } from "next-auth/react";
 import { User } from "lucide-react";
 import { ProfileClient } from "./profile-client";
 
-export default async function Profile() {
-  const session = await auth();
+export default function Profile() {
+  const { data: session } = useSession();
   if (!session) {
     return (
       <div className="flex gap-3 items-center">

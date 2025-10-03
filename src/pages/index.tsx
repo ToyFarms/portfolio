@@ -11,7 +11,7 @@ export default function HomePage() {
         <div className="text-[3rem] leading-none font-[450] indent-12">
           <p>My name is Diandra Shafar Rahman.</p>
           <span>
-            I'm a <span className="text-primary">Fullstack Developer</span>{" "}
+            I&apos;m a <span className="text-primary">Fullstack Developer</span>{" "}
             based in Indonesia
           </span>
         </div>

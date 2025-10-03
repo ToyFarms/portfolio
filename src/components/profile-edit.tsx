@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { UserIcon } from "lucide-react";
 import { Session } from "next-auth";
-import { UserUpdate, userUpdateSchema } from "@/app/api/user/types";
+import { UserUpdate, userUpdateSchema } from "@/pages/api/user/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function ProfileEditPage({ session }: { session: Session }) {
@@ -72,20 +72,20 @@ export default function ProfileEditPage({ session }: { session: Session }) {
         setSuccessMessage("Password changed — signing out...");
         await fetch("/api/logout");
         router.push("/login");
-        router.refresh();
+        router.reload();
         return;
       }
 
       try {
         await fetch("/api/auth/refresh", { method: "POST" });
         setSuccessMessage("Profile updated successfully!");
-        router.refresh();
+        router.reload();
       } catch (refreshError) {
         console.error("Session refresh failed:", refreshError);
         setSuccessMessage(
           "Profile updated successfully! Please refresh the page to see changes.",
         );
-        router.refresh();
+        router.reload();
       }
     } catch (e) {
       setServerError((e as Error).message || "Unexpected error");

@@ -16,6 +16,7 @@ import {
   SiTailwindcss,
   SiTypescript,
 } from "react-icons/si";
+import { GetServerSideProps } from "next";
 
 const size = 80;
 const techs = [
@@ -77,22 +78,16 @@ const techs = [
   },
 ];
 
-async function getImages() {
-  const res = await fetch(process.env.URL + "/api/gallery");
-  if (!res.ok) {
-    throw new Error("Failed to fetch gallery");
-  }
-  return (await res.json()).images;
+interface AboutPageProps {
+  images: ImageItem[];
 }
 
-export default async function AboutPage() {
-  let images: ImageItem[] = await getImages();
-
+export default function AboutPage({ images }: AboutPageProps) {
   return (
     <div>
       <div className="text-[3rem] leading-none font-[450] indent-12 mb-30">
         <p>
-          I'm a student and likes to <span className="text-primary">code</span>.
+          I&apos;m a student and likes to <span className="text-primary">code</span>.
         </p>
         <span>
           The journey began in 2019 as a hobby as passion with more than{" "}
@@ -126,3 +121,25 @@ export default async function AboutPage() {
     </div>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  try {
+    const res = await fetch(process.env.URL + "/api/gallery");
+    if (!res.ok) {
+      throw new Error("Failed to fetch gallery");
+    }
+    const data = await res.json();
+    return {
+      props: {
+        images: data.images || [],
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching gallery:", error);
+    return {
+      props: {
+        images: [],
+      },
+    };
+  }
+};

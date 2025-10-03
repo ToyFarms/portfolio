@@ -1,7 +1,10 @@
-import { auth } from "@/lib/auth";
+"use client";
+
+import { useSession } from "next-auth/react";
 import Profile from "./profile";
 
-export default async function Header() {
+export default function Header() {
+  const { data: session } = useSession();
   const contStyle = "flex flex-col";
   const labelStyle = "text-gray-500 text-[0.7rem] leading-none";
   const pStyle = "text-[1rem] uppercase font-[450]";
@@ -19,7 +22,6 @@ export default async function Header() {
       href: "/contact",
     },
   ];
-  const session = await auth();
   if (session) {
     links.push({ name: "Profile", href: "/profile" });
     if (session.user.role === "admin") {

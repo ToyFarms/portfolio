@@ -1,5 +1,4 @@
-// ...imports unchanged
-import NextAuth, { Session, User as NextUser } from "next-auth";
+import NextAuth, { Session } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/model/User";
@@ -8,7 +7,7 @@ import { AuthUser } from "@/lib/auth/types";
 import { credentialsSchema, LoginCredentials } from "@/lib/auth/schema";
 import { JWT } from "next-auth/jwt";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+export default NextAuth({
   providers: [
     CredentialsProvider({
       id: "credentials",
