@@ -5,7 +5,7 @@ import ProfileEdit from "@/components/profile-edit";
 export default async function Page() {
   const session = await auth();
   if (!session) {
-    return <p>Not logged in</p>;
+    return <div className="flex justify-center">Not logged in</div>;
   }
 
   return <ProfileEdit session={session} />;

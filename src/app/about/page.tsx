@@ -1,6 +1,5 @@
 import Gallery from "@/components/gallery";
 import { ImageItem } from "@/model/Gallery";
-import Image from "next/image";
 import {
   SiC,
   SiCplusplus,
@@ -91,7 +90,6 @@ export default async function AboutPage() {
 
   return (
     <div>
-      <hr className="pb-10" />
       <div className="text-[3rem] leading-none font-[450] indent-12 mb-30">
         <p>
           I'm a student and likes to <span className="text-primary">code</span>.
@@ -111,9 +109,9 @@ export default async function AboutPage() {
 
       <h2 className="text-[3rem] font-[450]">Gallery</h2>
       <hr className="mb-10" />
-      <Gallery images={images}/>
+      <Gallery images={images} />
 
-      <h2 className="text-[3rem] font-[450]">Technologies</h2>
+      <h2 className="text-[3rem] font-[450] mt-30">Technologies</h2>
       <hr className="mb-10" />
       <ul className="flex flex-row flex-wrap gap-8 text-muted">
         {techs.map((t) => (

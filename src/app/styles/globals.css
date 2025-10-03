@@ -1,6 +1,7 @@
 @import url("https://fonts.cdnfonts.com/css/pp-neue-montreal");
 
 @import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -54,12 +55,12 @@ hr {
   border-color: var(--color-muted);
 }
 
-a {
+a:not(.df) {
   display: inline-block;
   position: relative;
 }
 
-a::after {
+a:not(.df)::after {
   content: "";
   position: absolute;
   left: 0;
@@ -71,12 +72,12 @@ a::after {
   transition-duration: 100ms;
 }
 
-a:hover::after {
+a:not(.df):hover::after {
   width: 100%;
 }
 
 @layer base {
-  button {
+  button:not(.df) {
     padding: 4px;
     border-radius: 0px;
     outline: 1px solid black;

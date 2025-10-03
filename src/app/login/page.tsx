@@ -60,119 +60,116 @@ export default function LoginPage() {
   }
 
   return (
-    <div>
-      <hr className="pb-10" />
-      <main className="flex items-center justify-center p-6">
-        <div className="w-full max-w-md bg-white outline p-8">
-          <h1 className="text-2xl font-semibold mb-2 text-gray-900">
-            Sign in to your account
-          </h1>
-          <p className="text-sm text-gray-500 mb-6">
-            Enter your email and password to continue.
-          </p>
+    <main className="flex items-center justify-center p-6">
+      <div className="w-full max-w-md bg-white outline p-8">
+        <h1 className="text-2xl font-semibold mb-2 text-gray-900">
+          Sign in to your account
+        </h1>
+        <p className="text-sm text-gray-500 mb-6">
+          Enter your email and password to continue.
+        </p>
 
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="space-y-4"
-            noValidate
-          >
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                aria-invalid={errors.email ? "true" : "false"}
-                aria-describedby={errors.email ? "email-error" : undefined}
-                {...register("email")}
-                className={`mt-1 block w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-sky-500 disabled:opacity-50 ${
-                  errors.email ? "border-red-300" : "border-gray-200"
-                }`}
-                placeholder="you@example.com"
-              />
-              {errors.email && (
-                <p
-                  id="email-error"
-                  role="alert"
-                  className="mt-1 text-xs text-red-600"
-                >
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
-
-            <div className="mb-8">
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <div className="relative mt-1">
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  aria-invalid={errors.password ? "true" : "false"}
-                  aria-describedby={
-                    errors.password ? "password-error" : undefined
-                  }
-                  {...register("password")}
-                  className={`block w-full rounded-md border px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-sky-500 disabled:opacity-50 ${
-                    errors.password ? "border-red-300" : "border-gray-200"
-                  }`}
-                  placeholder="***"
-                />
-
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((s) => !s)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-500 hover:text-gray-700 outline-0"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
-                </button>
-              </div>
-              {errors.password && (
-                <p
-                  id="password-error"
-                  role="alert"
-                  className="mt-1 text-xs text-red-600"
-                >
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
-
-            {serverError && (
-              <div
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4"
+          noValidate
+        >
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              autoComplete="email"
+              aria-invalid={errors.email ? "true" : "false"}
+              aria-describedby={errors.email ? "email-error" : undefined}
+              {...register("email")}
+              className={`mt-1 block w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-sky-500 disabled:opacity-50 ${
+                errors.email ? "border-red-300" : "border-gray-200"
+              }`}
+              placeholder="you@example.com"
+            />
+            {errors.email && (
+              <p
+                id="email-error"
                 role="alert"
-                className="rounded-md bg-red-50 p-3 text-sm text-red-700"
+                className="mt-1 text-xs text-red-600"
               >
-                {serverError}
-              </div>
+                {errors.email.message}
+              </p>
             )}
+          </div>
 
-            <div>
-              <button type="submit" disabled={isSubmitting} className="w-full">
-                {isSubmitting ? "Signing in…" : "Sign in"}
+          <div className="mb-8">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Password
+            </label>
+            <div className="relative mt-1">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                aria-invalid={errors.password ? "true" : "false"}
+                aria-describedby={
+                  errors.password ? "password-error" : undefined
+                }
+                {...register("password")}
+                className={`block w-full rounded-md border px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-sky-500 disabled:opacity-50 ${
+                  errors.password ? "border-red-300" : "border-gray-200"
+                }`}
+                placeholder="***"
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-500 hover:text-gray-700 outline-0"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
               </button>
             </div>
-          </form>
-
-          <div className="mt-6 text-center text-sm text-gray-600">
-            Don’t have an account?{" "}
-            <a href="/signup" className="text-indigo-600 hover:underline">
-              Create one
-            </a>
+            {errors.password && (
+              <p
+                id="password-error"
+                role="alert"
+                className="mt-1 text-xs text-red-600"
+              >
+                {errors.password.message}
+              </p>
+            )}
           </div>
+
+          {serverError && (
+            <div
+              role="alert"
+              className="rounded-md bg-red-50 p-3 text-sm text-red-700"
+            >
+              {serverError}
+            </div>
+          )}
+
+          <div>
+            <button type="submit" disabled={isSubmitting} className="w-full">
+              {isSubmitting ? "Signing in…" : "Sign in"}
+            </button>
+          </div>
+        </form>
+
+        <div className="mt-6 text-center text-sm text-gray-600">
+          Don’t have an account?{" "}
+          <a href="/signup" className="text-indigo-600 hover:underline">
+            Create one
+          </a>
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }

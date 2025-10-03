@@ -5,7 +5,6 @@ import React, { JSX, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createNoise2D } from "simplex-noise";
 import {
   motion,
-  useAnimationControls,
   useMotionValue,
   useTransform,
   useSpring,

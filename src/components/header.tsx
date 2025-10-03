@@ -20,10 +20,13 @@ export default async function Header() {
     },
   ];
   const session = await auth();
-  if (!session) {
+  if (session) {
+    links.push({ name: "Profile", href: "/profile" });
+    if (session.user.role === "admin") {
+      links.push({ name: "Dashboard", href: "/dashboard" });
+    }
+  } else {
     links.push({ name: "Login", href: "/login" });
-  } else if (session.user.role === "admin") {
-    links.push({ name: "Dashboard", href: "/dashboard" });
   }
 
   const socials = [
@@ -31,48 +34,59 @@ export default async function Header() {
       name: "Instagram",
       href: "https://instagram.com/shafarrahman",
     },
+    {
+      name: "Github",
+      href: "https://github.com/ToyFarms",
+    },
+    {
+      name: "Whatsapp",
+      href: "https://wa.me/628979994344",
+    },
   ];
 
   return (
-    <div className="flex justify-between mb-7">
-      <div className={contStyle}>
-        <p className={labelStyle}>Name</p>
-        <p className={pStyle}>Diandra Shafar Rahman</p>
+    <div className="mb-12">
+      <div className="flex justify-between mb-7">
+        <div className={contStyle}>
+          <p className={labelStyle}>Name</p>
+          <p className={pStyle}>Diandra Shafar Rahman</p>
+        </div>
+        <div className={contStyle}>
+          <p className={labelStyle}>Status</p>
+          <p className={pStyle}>Student</p>
+        </div>
+        <div className={contStyle}>
+          <p className={labelStyle}>Navigation</p>
+          <ol className="flex max-w-64 flex-wrap gap-x-1">
+            {links.map((l, i) => (
+              <li key={l.name}>
+                <a className={pStyle} href={l.href}>
+                  {l.name}
+                </a>
+                <span>{i !== links.length - 1 && ","}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <div className={contStyle}>
+          <p className={labelStyle}>My Social</p>
+          <ol className="flex max-w-64 flex-wrap gap-x-1">
+            {socials.map((l, i) => (
+              <li key={l.name}>
+                <a className={pStyle} href={l.href} target="_blank">
+                  {l.name}
+                </a>
+                <span>{i !== socials.length - 1 && ", "}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <div className={contStyle}>
+          <p className={labelStyle}>Profile</p>
+          <Profile />
+        </div>
       </div>
-      <div className={contStyle}>
-        <p className={labelStyle}>Status</p>
-        <p className={pStyle}>Hireable</p>
-      </div>
-      <div className={contStyle}>
-        <p className={labelStyle}>Navigation</p>
-        <ol className="flex">
-          {links.map((l, i) => (
-            <li key={l.name}>
-              {i !== 0 && ", "}
-              <a className={pStyle} href={l.href}>
-                {l.name}
-              </a>
-            </li>
-          ))}
-        </ol>
-      </div>
-      <div className={contStyle}>
-        <p className={labelStyle}>My Social</p>
-        <ol className="flex">
-          {socials.map((l, i) => (
-            <li key={l.name}>
-              {i !== 0 && ", "}
-              <a className={pStyle} href={l.href}>
-                {l.name}
-              </a>
-            </li>
-          ))}
-        </ol>
-      </div>
-      <div className={contStyle}>
-        <p className={labelStyle}>Profile</p>
-        <Profile />
-      </div>
+      <hr />
     </div>
   );
 }

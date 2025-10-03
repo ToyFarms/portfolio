@@ -70,8 +70,9 @@ export default function ProfileEditPage({ session }: { session: Session }) {
 
       if (changingPassword) {
         setSuccessMessage("Password changed — signing out...");
-        await fetch("/api/auth/signout", { method: "POST" });
+        await fetch("/api/logout");
         router.push("/login");
+        router.refresh();
         return;
       }
 

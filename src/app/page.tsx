@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Me from "@/../public/me.png";
 import Me2 from "@/../public/me2.png";
 import AnimatedMaskImage from "@/components/animated-mask-image";
@@ -9,7 +8,6 @@ export default function HomePage() {
   return (
     <div className="flex flex-row justify-around">
       <div>
-        <hr className="pb-10" />
         <div className="text-[3rem] leading-none font-[450] indent-12">
           <p>My name is Diandra Shafar Rahman.</p>
           <span>

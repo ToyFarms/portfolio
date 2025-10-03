@@ -1,8 +1,11 @@
 "use client";
 
 import { ImageItem } from "@/model/Gallery";
-import { CircleX, ArrowRight, ArrowLeft } from "lucide-react";
+import { CircleX, ArrowRight, ArrowLeft, Filter } from "lucide-react";
 import React, { JSX, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "./ui/button";
 
 type Props = {
   images: ImageItem[];
@@ -14,8 +17,50 @@ export default function Gallery({ images = [] }: Props): JSX.Element {
   const [visibleCount, setVisibleCount] = useState<number>(3);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [modalIndex, setModalIndex] = useState<number>(0);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-  const shuffled = useMemo(() => shuffleArray(images || []), [images]);
+  const unique = useMemo(() => {
+    const map = new Map<string, ImageItem>();
+    for (const it of images || []) map.set((it as any)._id, it);
+    return Array.from(map.values());
+  }, [images]);
+
+  const shuffledRef = useRef<ImageItem[]>([]);
+  useEffect(() => {
+    const ids = unique.map((i) => (i as any)._id).join(",");
+    const prevIds = shuffledRef.current.map((i) => (i as any)._id).join(",");
+    if (!shuffledRef.current.length || ids !== prevIds) {
+      shuffledRef.current = shuffleArray(unique);
+    }
+  }, [unique]);
+
+  const shuffled = shuffledRef.current;
+
+  const imageTags = useMemo(() => {
+    return new Map<string, string[]>(
+      shuffled.map((img) => [
+        img._id,
+        (img.tags || "")
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
+      ]),
+    );
+  }, [shuffled]);
+
+  const availableTags = useMemo(() => {
+    const s = new Set<string>();
+    for (const tags of imageTags.values()) tags.forEach((t) => s.add(t));
+    return Array.from(s).sort();
+  }, [imageTags]);
+
+  const filteredList = useMemo(() => {
+    if (!selectedTags.length) return shuffled;
+    return shuffled.filter((img) => {
+      const tags = imageTags.get(img._id) || [];
+      return selectedTags.every((tag) => tags.includes(tag));
+    });
+  }, [shuffled, selectedTags, imageTags]);
 
   useEffect(() => {
     const targetColumnWidth = 220;
@@ -35,37 +80,82 @@ export default function Gallery({ images = [] }: Props): JSX.Element {
     return () => ro.disconnect();
   }, []);
 
-  const displayed = showAll ? shuffled : shuffled.slice(0, visibleCount);
+  const currentList = filteredList;
+  const displayed = showAll ? currentList : currentList.slice(0, visibleCount);
 
   function openModalFromDisplayed(indexInDisplayed: number) {
     const img = displayed[indexInDisplayed];
-    const globalIndex = shuffled.findIndex((s) => s._id === img._id);
+    const globalIndex = currentList.findIndex((s) => s._id === img._id);
     setModalIndex(globalIndex >= 0 ? globalIndex : 0);
     setModalOpen(true);
   }
+
+  useEffect(() => {
+    if (modalIndex >= currentList.length) setModalIndex(0);
+  }, [currentList.length]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (!modalOpen) return;
       if (e.key === "Escape") setModalOpen(false);
       if (e.key === "ArrowRight")
-        setModalIndex((i) => (i + 1) % shuffled.length);
+        setModalIndex((i) => (i + 1) % currentList.length);
       if (e.key === "ArrowLeft")
-        setModalIndex((i) => (i - 1 + shuffled.length) % shuffled.length);
+        setModalIndex((i) => (i - 1 + currentList.length) % currentList.length);
     }
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [modalOpen, shuffled.length]);
+  }, [modalOpen, currentList.length]);
+
+  function toggleTag(tag: string) {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+    );
+  }
+
+  function clearTags() {
+    setSelectedTags([]);
+  }
 
   return (
     <div ref={containerRef}>
-      <div className="flex items-center justify-end mb-4 gap-4">
+      <div className="flex items-center justify-between mb-4 gap-4">
+        <div className="flex gap-5 items-center flex-wrap">
+          <Filter />
+          <div className="flex gap-2">
+            {availableTags.length === 0 ? (
+              <div className="text-sm text-muted-foreground">No tags</div>
+            ) : (
+              availableTags.map((tag) => {
+                const active = selectedTags.includes(tag);
+                return (
+                  <Button
+                    key={tag}
+                    onClick={() => toggleTag(tag)}
+                    variant="outline"
+                    className={`df hover:bg-gray-300 hover:text-black rounded-none ${
+                      active
+                        ? "bg-primary text-primary-foreground border-transparent hover:bg-primary hover:text-white"
+                        : "bg-transparent border-transparent"
+                    }`}
+                  >
+                    {tag}
+                  </Button>
+                );
+              })
+            )}
+          </div>
+          {availableTags.length > 0 && (
+            <button onClick={clearTags}>Clear</button>
+          )}
+        </div>
+
         <div className="flex gap-2">
           <button onClick={() => setShowAll((s) => !s)}>
             {showAll
               ? "Show less"
-              : `Show ${Math.min(visibleCount, shuffled.length)} / ${shuffled.length}`}
+              : `Show ${Math.min(visibleCount, currentList.length)} / ${currentList.length}`}
           </button>
         </div>
       </div>
@@ -78,41 +168,59 @@ export default function Gallery({ images = [] }: Props): JSX.Element {
         }}
       >
         {displayed.map((img, i) => (
-          <div key={img._id} className="overflow-hidden break-inside-avoid">
+          <div
+            key={img._id}
+            className="overflow-hidden break-inside-avoid"
+            role="article"
+          >
             <button
               onClick={() => openModalFromDisplayed(i)}
-              className="outline-none"
+              className="outline-none w-full group relative"
               aria-label={`Open ${img.filename || "image"}`}
             >
-              <img
-                src={img.url}
-                alt={img.filename || "gallery image"}
-                loading="lazy"
-                className="w-full h-auto block object-cover align-top"
-                style={{ display: "block" }}
-              />
+              <ImageWithSkeleton img={img} />
+
+              <div className="absolute inset-0 pointer-events-none flex items-end">
+                <div className="w-full p-1 opacity-0 group-hover:opacity-100 transition">
+                  <div className="bg-gradient-to-t from-black/70 to-transparent rounded-md p-2 flex flex-wrap gap-2">
+                    {(imageTags.get(img._id) || []).slice(0, 8).map((t) => (
+                      <span
+                        key={t}
+                        className="text-xs px-2 py-1 bg-black/30 text-white"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </button>
           </div>
         ))}
       </div>
-      {!showAll && shuffled.length > visibleCount ? (
-        <div className="break-inside-avoid flex justify-center my-12">
-          <button onClick={() => setShowAll(true)} className="w-[20%] min-h-12">
-            Show all ({shuffled.length})
-          </button>
-        </div>
-      ) : (
-        <div className="break-inside-avoid flex justify-center my-12">
-          <button
-            onClick={() => setShowAll(false)}
-            className="w-[20%] min-h-12"
-          >
-            Show less
-          </button>
-        </div>
-      )}
 
-      {modalOpen && (
+      {filteredList.length > visibleCount &&
+        (!showAll && currentList.length > visibleCount ? (
+          <div className="break-inside-avoid flex justify-center my-12">
+            <button
+              onClick={() => setShowAll(true)}
+              className="w-[20%] min-h-12"
+            >
+              Show all ({currentList.length})
+            </button>
+          </div>
+        ) : (
+          <div className="break-inside-avoid flex justify-center my-12">
+            <button
+              onClick={() => setShowAll(false)}
+              className="w-[20%] min-h-12"
+            >
+              Show less
+            </button>
+          </div>
+        ))}
+
+      {modalOpen && currentList.length > 0 && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           role="dialog"
@@ -126,14 +234,14 @@ export default function Gallery({ images = [] }: Props): JSX.Element {
           <div className="relative max-w-[90vw] max-h-[90vh] w-full">
             <div className="flex items-center gap-2 justify-between mb-2 text-muted">
               <div className="text-sm">
-                {modalIndex + 1} / {shuffled.length}
+                {modalIndex + 1} / {currentList.length}
               </div>
               <div className="flex gap-2">
                 <button
                   className="outline-none"
                   onClick={() => setModalOpen(false)}
                 >
-                  <CircleX></CircleX>
+                  <CircleX />
                 </button>
               </div>
             </div>
@@ -142,11 +250,7 @@ export default function Gallery({ images = [] }: Props): JSX.Element {
               className="bg-black/20 backdrop-blur-lg rounded-lg overflow-hidden flex items-center justify-center"
               style={{ height: "75vh" }}
             >
-              <img
-                src={shuffled[modalIndex]?.url}
-                alt={shuffled[modalIndex]?.filename || "image"}
-                className="max-w-full max-h-full object-contain"
-              />
+              <ModalImageWithSkeleton img={currentList[modalIndex]} />
             </div>
 
             <div className="flex items-center justify-between mt-3">
@@ -154,7 +258,7 @@ export default function Gallery({ images = [] }: Props): JSX.Element {
                 className="outline-none"
                 onClick={() =>
                   setModalIndex(
-                    (i) => (i - 1 + shuffled.length) % shuffled.length,
+                    (i) => (i - 1 + currentList.length) % currentList.length,
                   )
                 }
               >
@@ -162,7 +266,9 @@ export default function Gallery({ images = [] }: Props): JSX.Element {
               </button>
               <button
                 className="outline-none"
-                onClick={() => setModalIndex((i) => (i + 1) % shuffled.length)}
+                onClick={() =>
+                  setModalIndex((i) => (i + 1) % currentList.length)
+                }
               >
                 <ArrowRight />
               </button>
@@ -172,7 +278,6 @@ export default function Gallery({ images = [] }: Props): JSX.Element {
       )}
 
       <style jsx>{`
-        /* Optional: small polish so images don't span full column width when very narrow */
         .gallery-masonry img {
           width: 100%;
           height: auto;
@@ -183,7 +288,58 @@ export default function Gallery({ images = [] }: Props): JSX.Element {
   );
 }
 
-// ---- helpers ----
+function ImageWithSkeleton({ img }: { img: ImageItem }) {
+  const [loaded, setLoaded] = useState(false);
+
+  return (
+    <div className="w-full relative">
+      {!loaded && (
+        <div className="absolute inset-0">
+          <Skeleton className="h-[200px] w-full rounded-md" />
+        </div>
+      )}
+
+      <div className="w-full" style={{ display: loaded ? "block" : "block" }}>
+        <Image
+          src={img.url || ""}
+          alt={img.filename || "gallery image"}
+          width={800}
+          height={600}
+          onLoadingComplete={() => setLoaded(true)}
+          className="w-full h-auto block object-cover rounded-md"
+          unoptimized
+        />
+      </div>
+    </div>
+  );
+}
+
+function ModalImageWithSkeleton({ img }: { img?: ImageItem }) {
+  const [loaded, setLoaded] = useState(false);
+
+  if (!img) return null;
+
+  return (
+    <div className="w-full h-full relative flex items-center justify-center">
+      {!loaded && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Skeleton className="h-[60vh] w-[60vw] rounded-md" />
+        </div>
+      )}
+
+      <Image
+        src={img.url || ""}
+        alt={img.filename || "image"}
+        width={1600}
+        height={1200}
+        onLoadingComplete={() => setLoaded(true)}
+        className="max-w-full max-h-full object-contain"
+        unoptimized
+      />
+    </div>
+  );
+}
+
 function shuffleArray<T>(arr: T[]): T[] {
   const a = Array.isArray(arr) ? [...arr] : [];
   for (let i = a.length - 1; i > 0; i--) {
