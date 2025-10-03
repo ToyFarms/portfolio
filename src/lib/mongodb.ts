@@ -8,29 +8,27 @@ if (!MONGODB_URI) {
 declare global {
   var mongooseCache:
     | {
-        conn?: typeof mongoose;
-        promise?: Promise<typeof mongoose>;
+        conn?: mongoose.Connection;
+        promise?: Promise<mongoose.Connection>;
       }
     | undefined;
 }
 
-if (!global.mongooseCache) global.mongooseCache = {};
+if (!globalThis.mongooseCache) globalThis.mongooseCache = {};
 
 export async function connectDB() {
-  if (!global.mongooseCache) {
-    return;
+  if (!globalThis.mongooseCache) globalThis.mongooseCache = {};
+
+  if (globalThis.mongooseCache.conn) {
+    return globalThis.mongooseCache.conn;
   }
 
-  if (global.mongooseCache.conn) {
-    return global.mongooseCache.conn;
-  }
-
-  if (!global.mongooseCache?.promise) {
-    global.mongooseCache.promise = mongoose
+  if (!globalThis.mongooseCache.promise) {
+    globalThis.mongooseCache.promise = mongoose
       .connect(MONGODB_URI!)
-      .then((x) => x);
+      .then((mongooseInstance) => mongooseInstance.connection);
   }
 
-  global.mongooseCache.conn = await global.mongooseCache.promise;
-  return global.mongooseCache.conn;
+  globalThis.mongooseCache.conn = await globalThis.mongooseCache.promise;
+  return globalThis.mongooseCache.conn;
 }

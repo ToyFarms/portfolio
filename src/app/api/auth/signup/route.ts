@@ -25,7 +25,6 @@ export async function POST(req: Request) {
     passwordHash,
     name: name || "",
     role: "user",
-    createdAt: new Date(),
   });
   await user.save();
 

@@ -32,6 +32,7 @@ export async function PUT(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
   }
+
   await connectDB();
 
   const data = parsed.data as UserUpdate;
@@ -40,7 +41,13 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const update: Partial<IUser> & UserUpdate = { ...data };
+  const update: Partial<IUser> & Partial<UserUpdate> = {};
+
+  console.log(data)
+  if (typeof data.name !== "undefined") update.name = data.name;
+  if (typeof data.image !== "undefined")
+    update.image = data.image === "" ? undefined : data.image;
+  console.log("then", data)
 
   if (data.newPassword) {
     if (!data.currentPassword) {
@@ -59,23 +66,61 @@ export async function PUT(req: Request) {
     }
 
     update.passwordHash = await bcrypt.hash(data.newPassword, 10);
-    update.tokenVersion = (user.tokenVersion ?? 0) + 1;
+    update.tokenVersion = (update.tokenVersion ?? user.tokenVersion ?? 0) + 1;
   }
 
-  delete update.currentPassword;
-  delete update.newPassword;
+  if (data.email && data.email !== user.email) {
+    if (!data.currentPassword) {
+      return NextResponse.json(
+        { error: "Please provide the current password to change email" },
+        { status: 400 },
+      );
+    }
 
-  const updatedUser = await User.findOneAndUpdate(
-    { email: session.user.email },
-    { $set: update },
-    { new: true, select: "-passwordHash" },
-  );
-  if (!updatedUser) {
+    const match = await bcrypt.compare(data.currentPassword, user.passwordHash);
+    if (!match) {
+      return NextResponse.json(
+        { error: "Password does not match" },
+        { status: 401 },
+      );
+    }
+
+    const existing = await User.findOne({ email: data.email });
+    if (existing && existing._id.toString() !== user._id.toString()) {
+      return NextResponse.json(
+        { error: "Email already in use" },
+        { status: 409 },
+      );
+    }
+
+    update.email = data.email;
+  }
+
+  try {
+    const updatedUser = await User.findOneAndUpdate(
+      { email: session.user.email },
+      { $set: update },
+      { new: true, select: "-passwordHash" },
+    );
+    if (!updatedUser) {
+      return NextResponse.json(
+        { error: "Failed to update user" },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({ user: updatedUser });
+  } catch (e: any) {
+    console.error("Failed to update user", e);
+    if (e?.code === 11000 && e.keyValue?.email) {
+      return NextResponse.json(
+        { error: "Email already in use" },
+        { status: 409 },
+      );
+    }
     return NextResponse.json(
-      { error: "Failed to update user" },
+      { error: e?.message ?? "Server error" },
       { status: 500 },
     );
   }
-
-  return NextResponse.json({ user: updatedUser });
 }

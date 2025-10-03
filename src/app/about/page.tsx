@@ -1,4 +1,6 @@
-import * as i from "lucide-react";
+import Gallery from "@/components/gallery";
+import { ImageItem } from "@/model/Gallery";
+import Image from "next/image";
 import {
   SiC,
   SiCplusplus,
@@ -8,7 +10,6 @@ import {
   SiLinux,
   SiLua,
   SiMongodb,
-  SiMysql,
   SiNextdotjs,
   SiPython,
   SiReact,
@@ -77,7 +78,17 @@ const techs = [
   },
 ];
 
-export default function AboutPage() {
+async function getImages() {
+  const res = await fetch(process.env.URL + "/api/gallery");
+  if (!res.ok) {
+    throw new Error("Failed to fetch gallery");
+  }
+  return (await res.json()).images;
+}
+
+export default async function AboutPage() {
+  let images: ImageItem[] = await getImages();
+
   return (
     <div>
       <hr className="pb-10" />
@@ -91,7 +102,17 @@ export default function AboutPage() {
             6 years of experience in various fields.
           </span>
         </span>
+        <p>
+          Initially interested in Game Development, but later discovered myself
+          passionate in Low Level, Fullstack, Design. I strive to excel at every
+          framework, tools, language thrown at me.
+        </p>
       </div>
+
+      <h2 className="text-[3rem] font-[450]">Gallery</h2>
+      <hr className="mb-10" />
+      <Gallery images={images}/>
+
       <h2 className="text-[3rem] font-[450]">Technologies</h2>
       <hr className="mb-10" />
       <ul className="flex flex-row flex-wrap gap-8 text-muted">

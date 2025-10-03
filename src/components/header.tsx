@@ -1,4 +1,7 @@
-export default function Header() {
+import { auth } from "@/lib/auth";
+import Profile from "./profile";
+
+export default async function Header() {
   const contStyle = "flex flex-col";
   const labelStyle = "text-gray-500 text-[0.7rem] leading-none";
   const pStyle = "text-[1rem] uppercase font-[450]";
@@ -16,6 +19,13 @@ export default function Header() {
       href: "/contact",
     },
   ];
+  const session = await auth();
+  if (!session) {
+    links.push({ name: "Login", href: "/login" });
+  } else if (session.user.role === "admin") {
+    links.push({ name: "Dashboard", href: "/dashboard" });
+  }
+
   const socials = [
     {
       name: "Instagram",
@@ -58,6 +68,10 @@ export default function Header() {
             </li>
           ))}
         </ol>
+      </div>
+      <div className={contStyle}>
+        <p className={labelStyle}>Profile</p>
+        <Profile />
       </div>
     </div>
   );
