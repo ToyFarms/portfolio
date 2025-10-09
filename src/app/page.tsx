@@ -2,7 +2,11 @@
 
 import Me from "@/../public/me.png";
 import Me2 from "@/../public/me2.png";
-import AnimatedMaskImage from "@/components/animated-mask-image";
+import dynamic from "next/dynamic";
+const AnimatedMaskImage = dynamic(
+  () => import("@/components/animated-mask-image"),
+  { ssr: false },
+);
 
 export default function HomePage() {
   return (

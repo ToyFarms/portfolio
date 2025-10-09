@@ -3,12 +3,7 @@
 import { StaticImageData } from "next/image";
 import React, { JSX, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createNoise2D } from "simplex-noise";
-import {
-  motion,
-  useMotionValue,
-  useTransform,
-  useSpring,
-} from "framer-motion";
+import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 
 type Props = {
   src: string | { src: string } | StaticImageData;
@@ -29,6 +24,10 @@ type RectMask = {
   y: number;
   w: number;
   h: number;
+  cx: number;
+  cy: number;
+  cw: number;
+  ch: number;
 };
 
 export default function AnimatedRectMaskImage({
@@ -83,7 +82,6 @@ export default function AnimatedRectMaskImage({
     img.src = normalizedSrc;
   }, [normalizedSrc]);
 
-  // initialize masks (perlin noise driven)
   useEffect(() => {
     const w = imgSize.w;
     const h = imgSize.h;
@@ -93,6 +91,10 @@ export default function AnimatedRectMaskImage({
       y: Math.random() * h,
       w: minWidth + Math.random() * (maxWidth - minWidth),
       h: minHeight + Math.random() * (maxHeight - minHeight),
+      cx: 0,
+      cy: 0,
+      cw: 0,
+      ch: 0,
     }));
   }, [
     rectCount,
@@ -104,7 +106,6 @@ export default function AnimatedRectMaskImage({
     maxHeight,
   ]);
 
-  // main per-frame loop for noise rects
   useEffect(() => {
     const svg = svgRef.current;
     if (!svg) return;
@@ -114,7 +115,6 @@ export default function AnimatedRectMaskImage({
 
     const totalRectCount = rectCount + mouseRectCount;
 
-    // ensure proper number of rect children (only for the noise rects; mouse rects are rendered via React)
     while (maskGroup.children.length < totalRectCount) {
       const r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
       r.setAttribute("fill", "white");
@@ -123,19 +123,40 @@ export default function AnimatedRectMaskImage({
     while (maskGroup.children.length > totalRectCount)
       maskGroup.removeChild(maskGroup.lastChild as ChildNode);
 
-    // only the first rectCount are controlled by noise (the later ones are replaced by React mouse rects)
     const rects: SVGRectElement[] = [];
     for (let i = 0; i < rectCount; i++)
       rects.push(maskGroup.children[i] as SVGRectElement);
 
+    const ms = masksRef.current;
+    for (let i = 0; i < ms.length; i++) {
+      const m = ms[i];
+      if (m.cx == null) {
+        m.cx = m.x;
+        m.cy = m.y;
+        m.cw = m.w;
+        m.ch = m.h;
+      }
+    }
+
+    let last = performance.now();
+
+    const smoothing = 24.0;
+
     const step = (now: number) => {
+      const dt = Math.max(0.001, (now - last) * 0.001);
+      last = now;
+
       const t = now * 0.001 * speed;
       const w = imgSize.w;
       const h = imgSize.h;
-      const ms = masksRef.current;
       const noise = noiseRef.current!;
-      for (let i = 0; i < ms.length; i++) {
-        const m = ms[i];
+      const msLocal = masksRef.current;
+
+      const alpha = 1 - Math.exp(-smoothing * dt);
+
+      for (let i = 0; i < msLocal.length; i++) {
+        const m = msLocal[i];
+
         const nx = noise(
           (m.seed + 1) * 0.000001 + t * noiseScale,
           m.seed * 0.000002 + t * noiseScale,
@@ -160,20 +181,22 @@ export default function AnimatedRectMaskImage({
 
         const rw = minWidth + sw * (maxWidth - minWidth);
         const rh = minHeight + sh * (maxHeight - minHeight);
-        const rx = Math.max(0, Math.min(w - rw, sx * w - rw / 2));
-        const ry = Math.max(0, Math.min(h - rh, sy * h - rh / 2));
+        const tx = Math.max(0, Math.min(w - rw, sx * w - rw / 2));
+        const ty = Math.max(0, Math.min(h - rh, sy * h - rh / 2));
+        const tw = rw;
+        const th = rh;
 
-        m.x = rx;
-        m.y = ry;
-        m.w = rw;
-        m.h = rh;
+        m.cx = (m.cx ?? tx) + (tx - (m.cx ?? tx)) * alpha;
+        m.cy = (m.cy ?? ty) + (ty - (m.cy ?? ty)) * alpha;
+        m.cw = (m.cw ?? tw) + (tw - (m.cw ?? tw)) * alpha;
+        m.ch = (m.ch ?? th) + (th - (m.ch ?? th)) * alpha;
 
         const rElem = rects[i];
         if (!rElem) continue;
-        rElem.setAttribute("x", String(Math.round(m.x)));
-        rElem.setAttribute("y", String(Math.round(m.y)));
-        rElem.setAttribute("width", String(Math.round(m.w)));
-        rElem.setAttribute("height", String(Math.round(m.h)));
+        rElem.setAttribute("x", m.cx.toFixed(2));
+        rElem.setAttribute("y", m.cy.toFixed(2));
+        rElem.setAttribute("width", m.cw.toFixed(2));
+        rElem.setAttribute("height", m.ch.toFixed(2));
       }
 
       animRef.current = requestAnimationFrame(step);
