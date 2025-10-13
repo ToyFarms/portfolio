@@ -2,8 +2,8 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
 import User, { IUser } from "@/model/User";
 import { NextResponse } from "next/server";
-import { UserUpdate, userUpdateSchema } from "./types";
 import bcrypt from "bcryptjs";
+import { UserUpdate, userUpdateSchema } from "./types";
 
 export async function GET(_req: Request) {
   const session = await auth();

@@ -17,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="mx-5 sm:mx-10 md:mx-15 mt-8">
-        <div className="min-h-[100vh]">
+        <div className="min-h-[100vh] relative z-10">
           <Header />
           <main>{children}</main>
         </div>

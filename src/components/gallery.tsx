@@ -6,6 +6,7 @@ import React, { JSX, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "./ui/button";
+import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 
 type Props = {
   images: ImageItem[];
@@ -40,10 +41,7 @@ export default function Gallery({ images = [] }: Props): JSX.Element {
     return new Map<string, string[]>(
       shuffled.map((img) => [
         img._id,
-        (img.tags || "")
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean),
+        (img.tags || []).map((t) => t.trim()).filter(Boolean),
       ]),
     );
   }, [shuffled]);
@@ -178,11 +176,11 @@ export default function Gallery({ images = [] }: Props): JSX.Element {
               className="outline-none w-full group relative"
               aria-label={`Open ${img.filename || "image"}`}
             >
-              <ImageWithSkeleton img={img} />
+              <ImageParallax img={img} />
 
               <div className="absolute inset-0 pointer-events-none flex items-end">
                 <div className="w-full p-1 opacity-0 group-hover:opacity-100 transition">
-                  <div className="bg-gradient-to-t from-black/70 to-transparent rounded-md p-2 flex flex-wrap gap-2">
+                  <div className="bg-gradient-to-t from-black/70 to-transparent p-2 flex flex-wrap gap-2">
                     {(imageTags.get(img._id) || []).slice(0, 8).map((t) => (
                       <span
                         key={t}
@@ -246,10 +244,7 @@ export default function Gallery({ images = [] }: Props): JSX.Element {
               </div>
             </div>
 
-            <div
-              className="bg-black/20 backdrop-blur-lg rounded-lg overflow-hidden flex items-center justify-center"
-              style={{ height: "75vh" }}
-            >
+            <div className="bg-black/20 backdrop-blur-lg rounded-lg overflow-hidden flex items-center justify-center h-[75vh]">
               <ModalImageWithSkeleton img={currentList[modalIndex]} />
             </div>
 
@@ -288,28 +283,41 @@ export default function Gallery({ images = [] }: Props): JSX.Element {
   );
 }
 
-function ImageWithSkeleton({ img }: { img: ImageItem }) {
+function ImageParallax({ img }: { img: ImageItem }) {
   const [loaded, setLoaded] = useState(false);
+  const ref = useRef(null);
+
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+
+  const f = () => (Math.random() + 0.5) * 100;
+  const yRaw = useTransform(scrollYProgress, [0, 1], [f(), -f()]);
+  const y = useSpring(yRaw, { damping: 20, stiffness: 100 });
 
   return (
-    <div className="w-full relative">
+    <div className="w-full relative overflow-hidden outline" ref={ref}>
       {!loaded && (
         <div className="absolute inset-0">
-          <Skeleton className="h-[200px] w-full rounded-md" />
+          <Skeleton className="h-[200px] w-full" />
         </div>
       )}
 
-      <div className="w-full" style={{ display: loaded ? "block" : "block" }}>
+      <motion.div
+        style={{ y: y }}
+        className="w-full will-change-transform relative"
+      >
         <Image
           src={img.url || ""}
           alt={img.filename || "gallery image"}
           width={800}
           height={600}
           onLoadingComplete={() => setLoaded(true)}
-          className="w-full h-auto block object-cover rounded-md"
+          className="w-full h-auto block transform scale-[2] object-fill"
           unoptimized
         />
-      </div>
+      </motion.div>
     </div>
   );
 }

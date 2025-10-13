@@ -279,8 +279,27 @@ export default function AnimatedRectMaskImage({
     );
   });
 
+  const partial = 10;
+  const clipStart = `polygon(0% 0%, 0% 0%, 0% ${partial}%, 0% ${partial}%)`;
+  const clipMid = `polygon(0% 0%, 100% 0%, 100% ${partial}%, 0% ${partial}%)`;
+  const clipFull = `polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)`;
+
   return (
-    <div className={`relative overflow-hidden ${className}`}>
+    <motion.div
+      className={`relative overflow-hidden ${className}`}
+      initial={{ clipPath: clipStart, opacity: 0 }}
+      animate={{
+        clipPath: [clipStart, clipMid, clipFull],
+        opacity: [0, 1, 1],
+      }}
+      transition={{
+        duration: 2.5,
+        ease: [0.22, 1, 0.36, 1],
+        times: [0, 0.7, 1],
+        delay: 0.3,
+      }}
+      style={{ willChange: "clip-path" }}
+    >
       <svg
         ref={svgRef}
         viewBox={`0 0 ${w} ${h}`}
@@ -353,6 +372,6 @@ export default function AnimatedRectMaskImage({
           />
         )}
       </svg>
-    </div>
+    </motion.div>
   );
 }

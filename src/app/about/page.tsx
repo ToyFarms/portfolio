@@ -1,4 +1,6 @@
 import Gallery from "@/components/gallery";
+import HrAnimated from "@/components/hr-animated";
+import TextReveal from "@/components/text-reveal";
 import { ImageItem } from "@/model/Gallery";
 import {
   SiC,
@@ -91,27 +93,31 @@ export default async function AboutPage() {
   return (
     <div>
       <div className="text-[3rem] leading-none font-[450] indent-12 mb-30">
-        <p>
+        <TextReveal>
           I'm a student and likes to <span className="text-primary">code</span>.
-        </p>
-        <span>
+        </TextReveal>
+        <TextReveal className="ml-24">
           The journey began in 2019 as a hobby as passion with more than{" "}
           <span className="text-primary">
             6 years of experience in various fields.
           </span>
-        </span>
-        <p>
+        </TextReveal>
+        <TextReveal className="ml-24">
           Initially interested in Game Development, but later discovered myself
           passionate in Low Level, Fullstack, Design. I strive to excel at every
           framework, tools, language thrown at me.
-        </p>
+        </TextReveal>
       </div>
 
-      <h2 className="text-[3rem] font-[450]">Gallery</h2>
-      <hr className="mb-10" />
+      <TextReveal className="text-[3rem] font-[450]" splitBy="char">
+        Gallery
+      </TextReveal>
+      <HrAnimated className="mb-10" />
       <Gallery images={images} />
 
-      <h2 className="text-[3rem] font-[450] mt-30">Technologies</h2>
+      <TextReveal className="text-[3rem] font-[450] mt-30" splitBy="char">
+        Technologies
+      </TextReveal>
       <hr className="mb-10" />
       <ul className="flex flex-row flex-wrap gap-8 text-muted">
         {techs.map((t) => (

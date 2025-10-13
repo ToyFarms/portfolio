@@ -7,6 +7,7 @@
 
 @theme inline {
   --color-primary: #ff2f00;
+  --color-secondary: #fc6442;
   --color-muted: #4f4f4f;
   --color-text: #2e2e2e;
   --font-montreal: "PP Neue Montreal", sans-serif;
@@ -32,7 +33,6 @@
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
   --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);

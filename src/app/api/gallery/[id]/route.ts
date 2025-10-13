@@ -1,8 +1,12 @@
 import { connectDB } from "@/lib/mongodb";
+import { requireAdmin } from "@/lib/routeMiddleware";
 import { GalleryImage } from "@/model/Gallery";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: { id: string } },
+) {
   await connectDB();
   const { id } = params;
   const img = await GalleryImage.findById(id).exec();
@@ -21,7 +25,10 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   return NextResponse.json({ error: "No image data" }, { status: 404 });
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } },
+) {
   await connectDB();
   const { id } = params;
   const img = await GalleryImage.findById(id).exec();
@@ -63,7 +70,14 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  // TODO: test this middleware
+  const auth = await requireAdmin(req);
+  if (auth instanceof NextResponse) return auth;
+
   await connectDB();
   const { id } = params;
   await GalleryImage.findByIdAndDelete(id).exec();

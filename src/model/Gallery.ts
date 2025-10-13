@@ -6,7 +6,7 @@ export interface IGalleryImage extends mongoose.Document {
   contentType?: string | null;
   size?: number | null;
   bytes?: number | null;
-  tags?: string | null;
+  tags?: string[] | null;
   url?: string | null;
   publicId?: string | null;
   width?: number | null;
@@ -24,7 +24,20 @@ const GalleryImageSchema = new mongoose.Schema<IGalleryImage>(
     contentType: { type: String },
     size: { type: Number },
     bytes: { type: Number },
-    tags: { type: String },
+    tags: {
+      type: [String],
+      index: true,
+      default: [],
+      set: (value: string[] | string | null) => {
+        if (!value) return [];
+        if (Array.isArray(value))
+          return value.map((t) => t.trim()).filter(Boolean);
+        return value
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean);
+      },
+    },
 
     url: { type: String, index: true },
     publicId: { type: String, index: true },
@@ -66,15 +79,13 @@ export const GalleryImage =
 
 export default GalleryImage;
 
-
 // TODO: this belongs in /api
 export type ImageItem = {
   _id: string;
   filename: string;
   contentType?: string;
   size?: number;
-  tags?: string;
+  tags?: string[];
   url?: string;
   createdAt?: string;
 };
-

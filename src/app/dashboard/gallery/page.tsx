@@ -1,6 +1,7 @@
 "use client";
 
 import { ImageItem } from "@/model/Gallery";
+import { EditIcon, TrashIcon, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
 function formatBytes(bytes?: number) {
@@ -119,7 +120,7 @@ export default function DashboardPage() {
 
   function openEdit(img: ImageItem) {
     setSelected(img);
-    setEditTags(img.tags || "");
+    setEditTags(img.tags?.join(", ") || "");
   }
 
   async function saveEdit() {
@@ -262,7 +263,7 @@ export default function DashboardPage() {
 
                   <div className="mt-2 text-sm text-gray-700 min-h-[2.25rem]">
                     {img.tags ? (
-                      <div className="truncate">{img.tags}</div>
+                      <div className="truncate">{img.tags.join(", ")}</div>
                     ) : (
                       <div className="text-gray-400">No tags</div>
                     )}
@@ -272,16 +273,16 @@ export default function DashboardPage() {
                     <button
                       type="button"
                       onClick={() => openEdit(img)}
-                      className="flex-1 px-2 py-1 text-sm rounded-md border outline-none hover:shadow-sm"
+                      className="px-2 py-1 text-sm rounded-md border outline-none hover:shadow-sm"
                     >
-                      Edit
+                      <EditIcon />
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDelete(img._id)}
                       className="px-2 py-1 text-sm rounded-md border text-red-600 outline-none hover:bg-red-50"
                     >
-                      Delete
+                      <TrashIcon />
                     </button>
                   </div>
                 </div>
@@ -301,9 +302,9 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => setSelected(null)}
-                className="text-gray-500 text-sm"
+                className="text-gray-500 text-sm df"
               >
-                Close
+                <X />
               </button>
             </div>
 
@@ -351,7 +352,7 @@ function UrlAdder({
     if (!val) return;
     setAdding(true);
     try {
-      await onAdd(val);
+      onAdd(val);
       setVal("");
     } finally {
       setAdding(false);

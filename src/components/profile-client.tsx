@@ -23,7 +23,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 
-export function ProfileClient({ session }: { session: Session }) {
+export function ProfileClient({ session }: { session: Session | null }) {
+  if (!session) {
+    return <p>Not logged in</p>;
+  }
+
   const user = session.user;
   const [open, setOpen] = useState(false);
 
