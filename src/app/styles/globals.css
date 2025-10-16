@@ -8,7 +8,7 @@
 @theme inline {
   --color-primary: #ff2f00;
   --color-secondary: #fc6442;
-  --color-muted: #4f4f4f;
+  /* --color-muted: #4f4f4f; */
   --color-text: #2e2e2e;
   --font-montreal: "PP Neue Montreal", sans-serif;
 
@@ -77,7 +77,7 @@ a:not(.df):hover::after {
 }
 
 @layer base {
-  button:not(.df) {
+  button.df {
     padding: 4px;
     border-radius: 0px;
     outline: 1px solid black;

@@ -11,7 +11,7 @@ function formatBytes(bytes?: number) {
   return Math.round(bytes / (1024 * 1024)) + " MB";
 }
 
-export default function DashboardPage() {
+export default function GalleryDashboard() {
   const [images, setImages] = useState<ImageItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -302,7 +302,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => setSelected(null)}
-                className="text-gray-500 text-sm df"
+                className="text-gray-500 text-sm"
               >
                 <X />
               </button>

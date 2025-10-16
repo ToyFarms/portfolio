@@ -132,7 +132,7 @@ export default function Gallery({ images = [] }: Props): JSX.Element {
                     key={tag}
                     onClick={() => toggleTag(tag)}
                     variant="outline"
-                    className={`df hover:bg-gray-300 hover:text-black rounded-none ${
+                    className={`hover:bg-gray-300 hover:text-black rounded-none ${
                       active
                         ? "bg-primary text-primary-foreground border-transparent hover:bg-primary hover:text-white"
                         : "bg-transparent border-transparent"
@@ -202,7 +202,7 @@ export default function Gallery({ images = [] }: Props): JSX.Element {
           <div className="break-inside-avoid flex justify-center my-12">
             <button
               onClick={() => setShowAll(true)}
-              className="w-[20%] min-h-12"
+              className="w-[20%] min-h-12 df"
             >
               Show all ({currentList.length})
             </button>

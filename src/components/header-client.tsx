@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Session } from "next-auth";
 import { ProfileClient } from "./profile-client";
 import HrAnimated from "./hr-animated";
+import { SquareArrowOutUpRight } from "lucide-react";
 
 interface Link {
   name: string;
@@ -55,26 +56,30 @@ export default function HeaderClient({
         </motion.div>
         <motion.div variants={itemVariants} className={contStyle}>
           <p className={labelStyle}>Navigation</p>
-          <ol className="flex max-w-64 flex-wrap gap-x-1">
-            {links.map((l, i) => (
+          <ol className="flex max-w-64 flex-wrap gap-x-5">
+            {links.map((l) => (
               <li key={l.name}>
-                <a className={pStyle} href={l.href}>
-                  {l.name}
-                </a>
-                <span>{i !== links.length - 1 && ","}</span>
+                <div className="flex">
+                  <a className={pStyle} href={l.href}>
+                    <span>{l.name}</span>
+                  </a>
+                  <SquareArrowOutUpRight size={12} />
+                </div>
               </li>
             ))}
           </ol>
         </motion.div>
         <motion.div variants={itemVariants} className={contStyle}>
           <p className={labelStyle}>My Social</p>
-          <ol className="flex max-w-64 flex-wrap gap-x-1">
+          <ol className="flex max-w-64 flex-wrap gap-x-5">
             {socials.map((l, i) => (
               <li key={l.name}>
-                <a className={pStyle} href={l.href} target="_blank">
-                  {l.name}
-                </a>
-                <span>{i !== socials.length - 1 && ", "}</span>
+                <div className="flex">
+                  <a className={pStyle} href={l.href} target="_blank">
+                    {l.name}
+                  </a>
+                  <SquareArrowOutUpRight size={12} />
+                </div>
               </li>
             ))}
           </ol>
@@ -88,3 +93,4 @@ export default function HeaderClient({
     </div>
   );
 }
+// <span>{i !== socials.length - 1 && ", "}</span>

@@ -144,7 +144,7 @@ export default function Timeline({
                         }}
                       >
                         <motion.button
-                          className="w-20 h-20 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white df"
+                          className="w-20 h-20 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white"
                           onClick={() => setExpandedIndex(idx)}
                           whileHover={{ scale: 1.1 }}
                         >
@@ -205,7 +205,7 @@ export default function Timeline({
                           </motion.div>
 
                           <motion.button
-                            className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center df"
+                            className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center"
                             onClick={() => setExpandedIndex(null)}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.2, type: "tween" }}
@@ -280,7 +280,7 @@ function Card({
       <div className="flex items-center gap-4">
         {align === "left" && item.mapsEmbed && (
           <motion.button
-            className="flex items-center justify-center df"
+            className="flex items-center justify-center"
             onClick={(e) => {
               e.stopPropagation();
               expandMap();
@@ -292,7 +292,7 @@ function Card({
         <p className="text-sm text-muted leading-relaxed">{item.loc}</p>
         {align === "right" && item.mapsEmbed && (
           <motion.button
-            className="flex items-center justify-center df"
+            className="flex items-center justify-center"
             onClick={(e) => {
               e.stopPropagation();
               expandMap();

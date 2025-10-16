@@ -4,22 +4,20 @@ import { auth } from "@/lib/auth";
 export async function POST() {
   try {
     const session = await auth();
-    
+
     if (!session) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    // The session refresh is handled by NextAuth's JWT callback
-    // This endpoint just triggers a session validation
-    return NextResponse.json({ 
-      success: true, 
-      message: "Session validated successfully" 
+    return NextResponse.json({
+      success: true,
+      message: "Session validated successfully",
     });
   } catch (error) {
     console.error("Session validation error:", error);
     return NextResponse.json(
       { error: "Failed to validate session" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -74,9 +74,8 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } },
 ) {
-  // TODO: test this middleware
-  const auth = await requireAdmin(req);
-  if (auth instanceof NextResponse) return auth;
+  const isAdmin = await requireAdmin(req);
+  if (isAdmin instanceof NextResponse) return isAdmin;
 
   await connectDB();
   const { id } = params;

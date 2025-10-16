@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import HeaderClient from "./header-client";
+import { socials } from "@/lib/dataSource";
 
 export default async function Header() {
   const links = [
@@ -21,21 +22,6 @@ export default async function Header() {
   } else {
     links.push({ name: "Login", href: "/login" });
   }
-
-  const socials = [
-    {
-      name: "Instagram",
-      href: "https://instagram.com/shafarrahman",
-    },
-    {
-      name: "Github",
-      href: "https://github.com/ToyFarms",
-    },
-    {
-      name: "Whatsapp",
-      href: "https://wa.me/628979994344",
-    },
-  ];
 
   return <HeaderClient session={session} links={links} socials={socials} />;
 }

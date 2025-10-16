@@ -12,9 +12,10 @@ export async function GET(_req: Request) {
   }
 
   await connectDB();
-  const user = await User.findOne({ email: session.user.email })
-    .select("-passwordHash")
-    .lean();
+  const user = await User.findOne(
+    { email: session.user.email },
+    { passwordHash: 0, tokenVersion: 0 },
+  ).lean();
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
