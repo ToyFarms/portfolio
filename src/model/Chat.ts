@@ -1,9 +1,8 @@
 import mongoose, { Types } from "mongoose";
 import { IUser } from "./User";
 
-export interface IChatMessage {
-  _id?: Types.ObjectId;
-  sender: Types.ObjectId;
+export interface IChatMessage extends mongoose.Document {
+  sender: number;
   content: string;
   read?: boolean;
   createdAt?: Date;
@@ -18,7 +17,7 @@ export interface IChatRoom extends mongoose.Document {
 }
 
 export interface IChatMessagePopulated extends mongoose.Document {
-  sender: IUser;
+  sender: number;
   content: string;
   read?: boolean;
   createdAt?: Date;
@@ -34,8 +33,7 @@ export interface IChatRoomPopulated extends mongoose.Document {
 const ChatMessageSchema = new mongoose.Schema<IChatMessage>(
   {
     sender: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: Number,
       required: true,
     },
     content: { type: String, required: true },
@@ -71,7 +69,10 @@ ChatRoomSchema.pre("save", function (next) {
   next();
 });
 
-ChatRoomSchema.index({ "participants.0": 1, "participants.1": 1 }, { unique: true });
+ChatRoomSchema.index(
+  { "participants.0": 1, "participants.1": 1 },
+  { unique: true },
+);
 
 export const ChatRoom =
   (mongoose.models?.ChatRoom as mongoose.Model<IChatRoom>) ??

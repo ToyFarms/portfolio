@@ -10,7 +10,6 @@ export async function GET(req: NextRequest) {
   if (id) {
     const room = await ChatRoom.findById(id)
       .populate("participants", "name email image")
-      .populate("messages.sender", "name email image")
       .sort({ updatedAt: -1 })
       .lean()
       .exec();
@@ -26,7 +25,6 @@ export async function GET(req: NextRequest) {
 
   const rooms = await ChatRoom.find({ participants: session.user.id })
     .populate("participants", "name email image")
-    .populate("messages.sender", "name email image")
     .sort({ updatedAt: -1 })
     .lean()
     .exec();
@@ -71,7 +69,7 @@ export async function PUT(req: NextRequest) {
   }
 
   const message = {
-    sender: new mongoose.Types.ObjectId(callerId),
+    sender: room.participants.findIndex((x) => x._id.toString() === callerId),
     content,
   };
 
@@ -82,9 +80,7 @@ export async function PUT(req: NextRequest) {
       $set: { updatedAt: new Date() },
     },
     { new: true, runValidators: true },
-  )
-    .populate("messages.sender", "-passwordHash -tokenVersion")
-    .exec();
+  ).exec();
 
   return NextResponse.json({ room: updated });
 }

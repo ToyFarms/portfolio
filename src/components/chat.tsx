@@ -7,8 +7,8 @@ import {
   Ellipsis,
   MessageCircleIcon,
   Plus,
+  RefreshCwIcon,
   Send,
-  TrashIcon,
   UserIcon,
   X,
 } from "lucide-react";
@@ -171,7 +171,7 @@ function ChatList() {
   const rooms: IChatRoomPopulated[] = data.rooms;
 
   return (
-    <div className="flex flex-col gap2">
+    <div className="flex flex-col gap-2">
       {rooms.map((r) => {
         return (
           <button
@@ -187,7 +187,22 @@ function ChatList() {
                   className="flex gap-2 items-center"
                 >
                   {renderAvatar(u)}
-                  <span>{u.name}</span>
+                  <div className="flex flex-col text-left">
+                    <span>{u.name}</span>
+                    {r.messages.length !== 0 && (
+                      <span className="text-sm text-gray-500">
+                        <span>
+                          {
+                            r.participants[
+                              r.messages[r.messages.length - 1].sender
+                            ].name
+                          }
+                          :{" "}
+                        </span>
+                        <span>{r.messages[r.messages.length - 1].content}</span>
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
           </button>
@@ -243,31 +258,30 @@ const renderAvatar = (sender: IUser) => {
 const ChatRoom: React.FC = () => {
   const { current } = useLocalHistory();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [participants, setParticipants] = useState<IUser[]>([]);
   const [messages, setMessages] = useState<IChatMessagePopulated[]>([]);
   const { data: session } = useSession();
-  const [recipientUser, setSenderUser] = useState<IUser>();
+  const [recipientUser, setRecipientUser] = useState<IUser>();
   const { pop } = useLocalHistory();
+
+  async function fetchMessage() {
+    try {
+      const res = await fetch(`/api/chat?id=${current?.params?.id}`);
+      const json: { room: IChatRoomPopulated } = await res.json();
+      setMessages(json.room?.messages ?? []);
+      setParticipants(json.room.participants);
+      console.log(json.room);
+      setRecipientUser(
+        json.room.participants.find((u) => u._id !== session?.user.id),
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   useEffect(() => {
     if (!current?.params?.id) return;
-    let mounted = true;
-    async function fetchMessage() {
-      try {
-        const res = await fetch(`/api/chat?id=${current?.params?.id}`);
-        const json: { room: IChatRoomPopulated } = await res.json();
-        if (!mounted) return;
-        setMessages(json.room?.messages ?? []);
-        setSenderUser(
-          json.room?.participants.find((u) => u._id !== session?.user.id),
-        );
-      } catch (err) {
-        console.error(err);
-      }
-    }
     fetchMessage();
-    return () => {
-      mounted = false;
-    };
   }, [current?.params?.id]);
 
   async function sendMessage() {
@@ -306,28 +320,34 @@ const ChatRoom: React.FC = () => {
         ) : (
           <div></div>
         )}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button>
-              <Ellipsis />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    className="outline-none text-white"
-                    variant="destructive"
-                    onClick={() => setOpen(true)}
-                  >
-                    Delete chat
-                  </Button>
-                </AlertDialogTrigger>
-              </AlertDialog>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex gap-4">
+          <button onClick={fetchMessage}>
+            <RefreshCwIcon size={20} />
+          </button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button>
+                <Ellipsis />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      className="outline-none text-white"
+                      variant="destructive"
+                      onClick={() => setOpen(true)}
+                    >
+                      Delete chat
+                    </Button>
+                  </AlertDialogTrigger>
+                </AlertDialog>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         <AlertDialog open={open} onOpenChange={setOpen}>
           <AlertDialogContent>
@@ -361,20 +381,20 @@ const ChatRoom: React.FC = () => {
           messages.map((m) => (
             <div
               key={(m._id as any).toString()}
-              className={`flex gap-3 ${m.sender._id !== session?.user.id ? "flex-row-reverse" : ""}`}
+              className={`flex gap-3 ${participants[m.sender]._id !== session?.user.id ? "flex-row-reverse" : ""}`}
             >
               <div
-                className={`flex flex-col max-w-[70%] ${m.sender._id !== session?.user.id ? "items-end" : "items-start"}`}
+                className={`flex flex-col max-w-[70%] ${participants[m.sender]._id !== session?.user.id ? "items-end" : "items-start"}`}
               >
                 <div className="text-xs text-gray-500 mb-1">
-                  {m.sender.name}
+                  {participants[m.sender].name}
                 </div>
                 <div
-                  className={`flex items-center gap-3 ${m.sender._id !== session?.user.id ? "flex-row-reverse" : ""}`}
+                  className={`flex items-center gap-3 ${participants[m.sender]._id !== session?.user.id ? "flex-row-reverse" : ""}`}
                 >
-                  {renderAvatar(m.sender)}
+                  {renderAvatar(participants[m.sender])}
                   <div
-                    className={`py-2 px-3 rounded-lg shadow-sm break-words ${m.sender._id === session?.user.id ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-900"}`}
+                    className={`py-2 px-3 rounded-lg shadow-sm break-words ${participants[m.sender]._id === session?.user.id ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-900"}`}
                   >
                     {m.content}
                   </div>
@@ -435,12 +455,7 @@ function AddNewChat() {
           className="px-3 py-2 border flex items-center gap-2 hover:bg-gray-200"
           onClick={() => startNewChatroom(u)}
         >
-          <Avatar className="flex items-center">
-            <AvatarImage src={u.image} />
-            <AvatarFallback>
-              <UserIcon />
-            </AvatarFallback>
-          </Avatar>
+          {renderAvatar(u)}
           <div className="flex flex-col text-left">
             <span>{u.name}</span>
             <span className="text-sm text-gray-500">{u.email}</span>
