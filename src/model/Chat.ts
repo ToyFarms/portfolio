@@ -16,16 +16,9 @@ export interface IChatRoom extends mongoose.Document {
   updatedAt?: Date;
 }
 
-export interface IChatMessagePopulated extends mongoose.Document {
-  sender: number;
-  content: string;
-  read?: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
 export interface IChatRoomPopulated extends mongoose.Document {
   participants: IUser[];
-  messages: IChatMessagePopulated[];
+  messages: IChatMessage[];
   createdAt?: Date;
   updatedAt?: Date;
 }

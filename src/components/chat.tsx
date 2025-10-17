@@ -22,13 +22,8 @@ import React, {
 } from "react";
 
 import { createPortal } from "react-dom";
-import { Avatar } from "./ui/avatar";
 import useSWR from "swr";
-import {
-  IChatMessagePopulated,
-  IChatRoom,
-  IChatRoomPopulated,
-} from "@/model/Chat";
+import { IChatMessage, IChatRoom, IChatRoomPopulated } from "@/model/Chat";
 import { SessionProvider, useSession } from "next-auth/react";
 import {
   AlertDialog,
@@ -259,10 +254,12 @@ const ChatRoom: React.FC = () => {
   const { current } = useLocalHistory();
   const inputRef = useRef<HTMLInputElement>(null);
   const [participants, setParticipants] = useState<IUser[]>([]);
-  const [messages, setMessages] = useState<IChatMessagePopulated[]>([]);
+  const [messages, setMessages] = useState<IChatMessage[]>([]);
   const { data: session } = useSession();
   const [recipientUser, setRecipientUser] = useState<IUser>();
   const { pop } = useLocalHistory();
+  const wsRef = useRef<WebSocket>(undefined);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   async function fetchMessage() {
     try {
@@ -270,7 +267,6 @@ const ChatRoom: React.FC = () => {
       const json: { room: IChatRoomPopulated } = await res.json();
       setMessages(json.room?.messages ?? []);
       setParticipants(json.room.participants);
-      console.log(json.room);
       setRecipientUser(
         json.room.participants.find((u) => u._id !== session?.user.id),
       );
@@ -278,6 +274,31 @@ const ChatRoom: React.FC = () => {
       console.error(err);
     }
   }
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    const ws = new WebSocket("ws://localhost:3001");
+    wsRef.current = ws;
+
+    ws.addEventListener("message", (ev) => {
+      const data: { chatroomId: string; msg: IChatMessage } = JSON.parse(
+        ev.data,
+      );
+
+      if (data.chatroomId === current?.params?.id) {
+        setMessages((m) => [...m, data.msg]);
+      }
+    });
+    return () => {
+      ws.close();
+      wsRef.current = undefined;
+    };
+  }, []);
 
   useEffect(() => {
     if (!current?.params?.id) return;
@@ -289,7 +310,7 @@ const ChatRoom: React.FC = () => {
     if (!value) return;
 
     try {
-      await fetch("/api/chat", {
+      const res = await fetch("/api/chat", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -297,6 +318,14 @@ const ChatRoom: React.FC = () => {
           content: value,
         }),
       });
+      const room = (await res.json()).room as IChatRoom;
+
+      wsRef.current?.send(
+        JSON.stringify({
+          chatroomId: current?.params?.id,
+          msg: room.messages[room.messages.length - 1],
+        }),
+      );
 
       if (inputRef.current) inputRef.current.value = "";
     } catch (err) {
@@ -402,6 +431,7 @@ const ChatRoom: React.FC = () => {
               </div>
             </div>
           ))}
+        <div ref={messagesEndRef} />
       </div>
 
       <div className="flex gap-2">

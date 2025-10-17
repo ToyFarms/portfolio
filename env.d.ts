@@ -6,6 +6,9 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       MONGODB_URI?: string;
+      URL?: string;
+      WS_URL?: string;
+      WS_HTTP_URL?: string;
     }
   }
 }
