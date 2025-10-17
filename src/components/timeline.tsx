@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Map, MapPin, X } from "lucide-react";
+import { Map, X } from "lucide-react";
 
 export interface TimelineObject {
   image: string;
@@ -277,10 +277,10 @@ function Card({
     >
       <h3 className="text-xl font-bold text-gray-800 mb-2">{item.title}</h3>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-start gap-4">
         {align === "left" && item.mapsEmbed && (
           <motion.button
-            className="flex items-center justify-center"
+            className="flex justify-center"
             onClick={(e) => {
               e.stopPropagation();
               expandMap();
@@ -292,7 +292,7 @@ function Card({
         <p className="text-sm text-muted leading-relaxed">{item.loc}</p>
         {align === "right" && item.mapsEmbed && (
           <motion.button
-            className="flex items-center justify-center"
+            className="flex justify-center"
             onClick={(e) => {
               e.stopPropagation();
               expandMap();

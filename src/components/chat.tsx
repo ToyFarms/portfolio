@@ -16,6 +16,7 @@ import React, {
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -43,6 +44,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { formatVariablePrecisionDate } from "@/lib/utils";
 
 type Page = { name: string; params?: Record<string, any> };
 
@@ -164,6 +166,9 @@ function ChatList() {
   if (error) return <p>Error loading users</p>;
 
   const rooms: IChatRoomPopulated[] = data.rooms;
+  if (!rooms) {
+    return <p>Something went wrong</p>;
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -179,13 +184,24 @@ function ChatList() {
               .map((u) => (
                 <div
                   key={(u._id as any).toString()}
-                  className="flex gap-2 items-center"
+                  className="flex gap-2 items-center overflow-x-hidden grow-1"
                 >
                   {renderAvatar(u)}
-                  <div className="flex flex-col text-left">
-                    <span>{u.name}</span>
+                  <div className="flex flex-col text-left grow-1">
+                    <div className="flex justify-between items-center">
+                      <span>{u.name}</span>
+                      {r.messages.length !== 0 && (
+                        <span className="text-sm text-gray-500">
+                          {formatVariablePrecisionDate(
+                            new Date(
+                              r.messages[r.messages.length - 1].createdAt!,
+                            ),
+                          )}
+                        </span>
+                      )}
+                    </div>
                     {r.messages.length !== 0 && (
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-gray-500 whitespace-nowrap text-ellipsis">
                         <span>
                           {
                             r.participants[
@@ -194,7 +210,9 @@ function ChatList() {
                           }
                           :{" "}
                         </span>
-                        <span>{r.messages[r.messages.length - 1].content}</span>
+                        <span className="truncate inline-block max-w-[200px] align-bottom">
+                          {r.messages[r.messages.length - 1].content}
+                        </span>
                       </span>
                     )}
                   </div>
@@ -212,7 +230,6 @@ const Menu: React.FC = () => {
   return (
     <div className="space-y-2">
       <h3>Menu</h3>
-      <ChatList />
       <div className="flex flex-col gap-2 text-sm">
         <button
           onClick={() => push({ name: "add" })}
@@ -222,6 +239,7 @@ const Menu: React.FC = () => {
           <span>New chat</span>
         </button>
       </div>
+      <ChatList />
     </div>
   );
 };
@@ -275,11 +293,11 @@ const ChatRoom: React.FC = () => {
     }
   }
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]);
+  }, [messages.length]);
 
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:3001");
@@ -415,11 +433,18 @@ const ChatRoom: React.FC = () => {
               <div
                 className={`flex flex-col max-w-[70%] ${participants[m.sender]._id !== session?.user.id ? "items-end" : "items-start"}`}
               >
-                <div className="text-xs text-gray-500 mb-1">
-                  {participants[m.sender].name}
+                <div
+                  className={`text-xs text-gray-500 mb-1 flex gap-4 ${participants[m.sender]._id !== session?.user.id ? "flex-row-reverse" : ""}`}
+                >
+                  <div>{participants[m.sender].name}</div>
+                  {m.createdAt && (
+                    <span>
+                      {formatVariablePrecisionDate(new Date(m.createdAt))}
+                    </span>
+                  )}
                 </div>
                 <div
-                  className={`flex items-center gap-3 ${participants[m.sender]._id !== session?.user.id ? "flex-row-reverse" : ""}`}
+                  className={`flex items-start gap-3 ${participants[m.sender]._id !== session?.user.id ? "flex-row-reverse" : ""}`}
                 >
                   {renderAvatar(participants[m.sender])}
                   <div
@@ -478,20 +503,26 @@ function AddNewChat() {
 
   return (
     <div className="flex flex-col gap-2">
-      <h1 className="text-lg font-[450]">Start a new chat!</h1>
-      {users.map((u) => (
-        <button
-          key={(u._id as any).toString()}
-          className="px-3 py-2 border flex items-center gap-2 hover:bg-gray-200"
-          onClick={() => startNewChatroom(u)}
-        >
-          {renderAvatar(u)}
-          <div className="flex flex-col text-left">
-            <span>{u.name}</span>
-            <span className="text-sm text-gray-500">{u.email}</span>
-          </div>
-        </button>
-      ))}
+      {users.length === 0 ? (
+        <p>You already chatted to all of them.</p>
+      ) : (
+        <>
+          <h1 className="text-lg font-[450]">Start a new chat!</h1>
+          {users.map((u) => (
+            <button
+              key={(u._id as any).toString()}
+              className="px-3 py-2 border flex items-center gap-2 hover:bg-gray-200"
+              onClick={() => startNewChatroom(u)}
+            >
+              {renderAvatar(u)}
+              <div className="flex flex-col text-left">
+                <span>{u.name}</span>
+                <span className="text-sm text-gray-500">{u.email}</span>
+              </div>
+            </button>
+          ))}
+        </>
+      )}
     </div>
   );
 }
@@ -516,7 +547,7 @@ const OverlayShell: React.FC<{
       <div
         ref={panelRef}
         role="dialog"
-        className="pointer-events-auto w-96 max-h-[70vh] bg-white rounded-xl shadow-2xl p-4 border ring-1 ring-black/5 overflow-hidden"
+        className="pointer-events-auto w-96 max-h-[70vh] bg-white rounded-xl shadow-2xl p-4 border ring-1 ring-black/5 overflow-x-hidden min-h-96"
       >
         <div className="flex items-center justify-between mb-3">
           <button
