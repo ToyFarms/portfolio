@@ -55,3 +55,95 @@ export const timelineObjects: TimelineObject[] = [
       "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.8780159629296!2d107.79299507598415!3d-6.9051875930941575!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e68db39f5d77063%3A0xcd7bf1a395871346!2sSMK%20Budi%20Mandiri!5e0!3m2!1sen!2sid!4v1760305144658!5m2!1sen!2sid",
   },
 ];
+
+export interface ProjectType {
+  title: string;
+  url: string;
+  description: string;
+  imageKey: string;
+  technologies: string[];
+}
+
+export const projects: ProjectType[] = [
+  {
+    title: "aplayer",
+    url: "https://github.com/ToyFarms/aplayer",
+    description: "Cross platform music player using TUI written purely in C",
+    imageKey: "project,aplayer",
+    technologies: ["C", "FFmpeg"],
+  },
+  {
+    title: "youtube-tui",
+    url: "https://github.com/ToyFarms/youtube-tui",
+    description:
+      "TUI application to interface with youtube with thumbnail view, and audio player",
+    imageKey: "project,youtube-tui",
+    technologies: ["Python"],
+  },
+  {
+    title: "GTProxy",
+    url: "https://github.com/ToyFarms/GTProxy",
+    description:
+      "Reverse proxy with packet sniffing, modification, fabrication for the game Growtopia",
+    imageKey: "project,gtproxy",
+    technologies: ["C++", "Enet"],
+  },
+  {
+    title: "gtworld",
+    url: "https://github.com/ToyFarms/gtworld",
+    description: "World rendering engine for the game Growtopia",
+    imageKey: "project,gtworld",
+    technologies: ["Python"],
+  },
+  {
+    title: "gtnote",
+    url: "https://github.com/ToyFarms/gtnote",
+    description: "Note simulation for the game Growtopia",
+    imageKey: "project,gtnote",
+    technologies: ["C", "FFmpeg", "Raylib"],
+  },
+  {
+    title: "VKBD",
+    url: "",
+    description:
+      "Custom keyboard and mouse driver for windows with userspace hook built for external botting",
+    imageKey: "project,vkbd",
+    technologies: ["C++", "WDK", "ImGui"],
+  },
+  {
+    title: "spotify-dl",
+    url: "https://github.com/ToyFarms/spotify-dl",
+    description:
+      "Custom built Spotify client written from scratch to download music and bypass Spotify DRM",
+    imageKey: "project,spotify-dl",
+    technologies: ["Python", "Socket", "ProtoBuf"],
+  },
+  {
+    title: "spotify-sync",
+    url: "https://github.com/ToyFarms/spotify-sync",
+    description: "Tool to sync local playlist with Spotify playlist",
+    imageKey: "project,spotify-sync",
+    technologies: ["Python", "Flask"],
+  },
+  {
+    title: "ig-mapper",
+    url: "https://github.com/ToyFarms/ig-mapper",
+    description: "Map your social network from Instagram followers",
+    imageKey: "project,ig-mapper",
+    technologies: ["Python"],
+  },
+  {
+    title: "Youtube-Storage",
+    url: "https://github.com/ToyFarms/Youtube_Storage",
+    description: "Tool to convert arbitrary data into encodable video",
+    imageKey: "project,youtube-storage",
+    technologies: ["Python"],
+  },
+  {
+    title: "CLI",
+    url: "https://github.com/ToyFarms/CLI",
+    description: "Unix tools written in python for Windows",
+    imageKey: "project,cli",
+    technologies: ["Python"],
+  },
+];

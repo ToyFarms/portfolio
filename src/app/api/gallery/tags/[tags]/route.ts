@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { tags: string } },
 ) {
   await connectDB();
-  const { tags } = params;
+  const { tags } = await params;
   const images = await GalleryImage.find({
     tags: { $all: tags.replaceAll(" ", "").split(",") },
   }).lean();

@@ -22,7 +22,13 @@ export default function Gallery({ images = [] }: Props): JSX.Element {
 
   const unique = useMemo(() => {
     const map = new Map<string, ImageItem>();
-    for (const it of images || []) map.set((it as any)._id, it);
+    for (const it of images || []) {
+      if ((it.tags || []).includes("project")) {
+        continue;
+      }
+      map.set((it as any)._id, it);
+    }
+
     return Array.from(map.values());
   }, [images]);
 
