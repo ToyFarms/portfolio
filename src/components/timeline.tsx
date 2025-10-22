@@ -144,7 +144,7 @@ export default function Timeline({
                         }}
                       >
                         <motion.button
-                          className="w-20 h-20 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white"
+                          className="w-12 h-12 rounded-full shadow-lg overflow-hidden bg-white"
                           onClick={() => setExpandedIndex(idx)}
                           whileHover={{ scale: 1.1 }}
                         >

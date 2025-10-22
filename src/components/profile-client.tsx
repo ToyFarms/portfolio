@@ -7,8 +7,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { UserIcon } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -22,6 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
+import ProfileImage from "./profile-image";
 
 export function ProfileClient({ session }: { session: Session | null }) {
   if (!session) {
@@ -37,29 +36,20 @@ export function ProfileClient({ session }: { session: Session | null }) {
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-2 hover:bg-muted/10 outline-none">
             <span className="hidden sm:inline">{user.name ?? user.email}</span>
-            <Avatar>
-              <AvatarImage src={user.image ?? undefined} />
-              <AvatarFallback>
-                <UserIcon />
-              </AvatarFallback>
-            </Avatar>
+            <ProfileImage user={user} />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" sideOffset={8} className="w-48 p-1">
           <DropdownMenuItem>
             <a className="w-full df" href="/profile">
-              <button className="w-full">
-                Profile
-              </button>
+              <button className="w-full">Profile</button>
             </a>
           </DropdownMenuItem>
 
           {user.role === "admin" && (
             <DropdownMenuItem>
               <a className="w-full df" href="/dashboard">
-                <button className="w-full">
-                  Dashboard
-                </button>
+                <button className="w-full">Dashboard</button>
               </a>
             </DropdownMenuItem>
           )}

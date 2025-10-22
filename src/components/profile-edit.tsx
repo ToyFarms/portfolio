@@ -4,10 +4,9 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { UserIcon } from "lucide-react";
 import { Session } from "next-auth";
 import { UserUpdate, userUpdateSchema } from "@/app/api/user/types";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import ProfileImage from "./profile-image";
 
 export default function ProfileEditPage({ session }: { session: Session }) {
   const router = useRouter();
@@ -97,16 +96,7 @@ export default function ProfileEditPage({ session }: { session: Session }) {
       <div className="max-w-2xl mx-auto">
         <div className="bg-white outline p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div>
-              <div className="flex items-center space-x-4">
-                <Avatar>
-                  <AvatarImage src={session.user.image ?? undefined} />
-                  <AvatarFallback>
-                    <UserIcon />
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-            </div>
+            <ProfileImage user={session.user} />
 
             <div>
               <label

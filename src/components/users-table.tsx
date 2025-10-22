@@ -11,9 +11,7 @@ import {
 import { IUser } from "@/model/User";
 import { ReactNode, useEffect, useState } from "react";
 import { HashLoader } from "react-spinners";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { AvatarFallback } from "@radix-ui/react-avatar";
-import { UserIcon } from "lucide-react";
+import ProfileImage from "./profile-image";
 
 export function UsersTable() {
   const [users, setUsers] = useState<IUser[]>();
@@ -48,14 +46,7 @@ export function UsersTable() {
   }
 
   const customHandler = {
-    image: (url: string): ReactNode => (
-      <Avatar className="flex justify-center items-center">
-        <AvatarImage src={url} />
-        <AvatarFallback>
-          <UserIcon />
-        </AvatarFallback>
-      </Avatar>
-    ),
+    image: (user: IUser): ReactNode => <ProfileImage user={user} />,
   };
 
   return (
@@ -75,7 +66,7 @@ export function UsersTable() {
             {header.map((h) => (
               <TableCell key={h}>
                 {h in customHandler
-                  ? (customHandler as any)[h]((u as any)[h])
+                  ? (customHandler as any)[h](u)
                   : (u as any)[h]}
               </TableCell>
             ))}

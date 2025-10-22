@@ -51,7 +51,7 @@ export default function HomePage() {
           ))}
         </div>
 
-        <Timeline objects={timelineObjects} className="mt-20" />
+        <Timeline objects={timelineObjects} className="mt-30" />
       </div>
 
       <AnimatedMaskImage

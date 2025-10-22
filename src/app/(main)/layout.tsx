@@ -30,7 +30,7 @@ export default function RootLayout({
             <main>{children}</main>
           </div>
           <Footer />
-            <Chat />
+          <Chat />
         </ThemeProvider>
       </body>
     </html>

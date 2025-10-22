@@ -97,7 +97,7 @@ export default async function AboutPage() {
   return (
     <div>
       <div className="flex flex-row">
-        <div className="text-[3rem] leading-none font-[450] indent-12 mb-30 flex-1/2">
+        <div className="text-[3rem] leading-none font-[450] indent-12 mb-30 flex-1/2 pr-40">
           <TextReveal>
             I'm a student and likes to{" "}
             <span className="text-primary">code</span>.
@@ -108,6 +108,7 @@ export default async function AboutPage() {
               6 years of experience in various fields.
             </span>
           </TextReveal>
+          <br />
           <TextReveal className="ml-24">
             Initially interested in Game Development, but later discovered
             myself passionate in Low Level, Fullstack, and Design. I strive to

@@ -1,7 +1,6 @@
 "use client";
 
 import { IUser } from "@/model/User";
-import { AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import {
   ArrowLeft,
   Ellipsis,
@@ -9,7 +8,6 @@ import {
   Plus,
   RefreshCwIcon,
   Send,
-  UserIcon,
   X,
 } from "lucide-react";
 import React, {
@@ -45,6 +43,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { formatVariablePrecisionDate } from "@/lib/utils";
+import ProfileImage from "./profile-image";
 
 type Page = { name: string; params?: Record<string, any> };
 
@@ -186,7 +185,7 @@ function ChatList() {
                   key={(u._id as any).toString()}
                   className="flex gap-2 items-center overflow-x-hidden grow-1"
                 >
-                  {renderAvatar(u)}
+                  <ProfileImage user={u} />
                   <div className="flex flex-col text-left grow-1">
                     <div className="flex justify-between items-center">
                       <span>{u.name}</span>
@@ -240,30 +239,6 @@ const Menu: React.FC = () => {
         </button>
       </div>
       <ChatList />
-    </div>
-  );
-};
-
-const renderAvatar = (sender: IUser) => {
-  const initials = (sender?.name || "?")
-    .split(" ")
-    .map((s) => s[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-
-  return (
-    <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center text-xs font-medium text-gray-600">
-      {sender?.image ? (
-        <img
-          src={sender.image}
-          alt={sender.name}
-          className="w-full h-full object-cover"
-        />
-      ) : (
-        <span>{initials}</span>
-      )}
     </div>
   );
 };
@@ -361,7 +336,7 @@ const ChatRoom: React.FC = () => {
       <div className="flex justify-between">
         {recipientUser ? (
           <div className="flex gap-2 items-center">
-            {renderAvatar(recipientUser)}
+            <ProfileImage user={recipientUser} />
             <span>{recipientUser.name}</span>
           </div>
         ) : (
@@ -446,7 +421,7 @@ const ChatRoom: React.FC = () => {
                 <div
                   className={`flex items-start gap-3 ${participants[m.sender]._id !== session?.user.id ? "flex-row-reverse" : ""}`}
                 >
-                  {renderAvatar(participants[m.sender])}
+                  <ProfileImage user={participants[m.sender]} />
                   <div
                     className={`py-2 px-3 rounded-lg shadow-sm break-words ${participants[m.sender]._id === session?.user.id ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-900"}`}
                   >
@@ -514,7 +489,7 @@ function AddNewChat() {
               className="px-3 py-2 border flex items-center gap-2 hover:bg-gray-200"
               onClick={() => startNewChatroom(u)}
             >
-              {renderAvatar(u)}
+              <ProfileImage user={u} />
               <div className="flex flex-col text-left">
                 <span>{u.name}</span>
                 <span className="text-sm text-gray-500">{u.email}</span>
@@ -530,7 +505,7 @@ function AddNewChat() {
 const OverlayShell: React.FC<{
   onClose: () => void;
   openerRef?: React.RefObject<HTMLElement>;
-}> = ({ onClose, openerRef }) => {
+}> = ({ onClose }) => {
   const { current, pop, canGoBack } = useLocalHistory();
   const panelRef = useRef<HTMLDivElement | null>(null);
 

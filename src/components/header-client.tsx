@@ -93,4 +93,3 @@ export default function HeaderClient({
     </div>
   );
 }
-// <span>{i !== socials.length - 1 && ", "}</span>
