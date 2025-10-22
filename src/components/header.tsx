@@ -16,9 +16,6 @@ export default async function Header() {
   const session = await auth();
   if (session) {
     links.push({ name: "Profile", href: "/profile" });
-    if (session.user.role === "admin") {
-      links.push({ name: "Dashboard", href: "/dashboard" });
-    }
   } else {
     links.push({ name: "Login", href: "/login" });
   }

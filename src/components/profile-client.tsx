@@ -48,11 +48,21 @@ export function ProfileClient({ session }: { session: Session | null }) {
         <DropdownMenuContent align="end" sideOffset={8} className="w-48 p-1">
           <DropdownMenuItem>
             <a className="w-full df" href="/profile">
-              <Button className="outline-none w-full" variant="outline">
+              <button className="w-full">
                 Profile
-              </Button>
+              </button>
             </a>
           </DropdownMenuItem>
+
+          {user.role === "admin" && (
+            <DropdownMenuItem>
+              <a className="w-full df" href="/dashboard">
+                <button className="w-full">
+                  Dashboard
+                </button>
+              </a>
+            </DropdownMenuItem>
+          )}
 
           <DropdownMenuItem>
             <AlertDialog>
