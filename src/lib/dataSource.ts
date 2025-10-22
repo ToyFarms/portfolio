@@ -49,7 +49,7 @@ export const timelineObjects: TimelineObject[] = [
     image: SMK.src,
     fromDate: "2024",
     toDate: "Now",
-    title: "SMP YBM Tanjungsari",
+    title: "SMK YBM Tanjungsari",
     loc: "Jl. Kutamandiri No.9, Kutamandiri, Kec. Tanjungsari, Kabupaten Sumedang, Jawa Barat 45362",
     mapsEmbed:
       "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.8780159629296!2d107.79299507598415!3d-6.9051875930941575!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e68db39f5d77063%3A0xcd7bf1a395871346!2sSMK%20Budi%20Mandiri!5e0!3m2!1sen!2sid!4v1760305144658!5m2!1sen!2sid",
