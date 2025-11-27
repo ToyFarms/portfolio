@@ -179,6 +179,10 @@ function RoomRow({
     setLastMessage(msg.data);
   });
 
+  const { presenceData } = usePresenceListener("global");
+  const isOnline = (id: any) =>
+    !!presenceData.find((peer) => peer.clientId == id);
+
   const otherParticipants = room.participants.filter(
     (p) => p.name !== currentUserName,
   );
@@ -199,11 +203,9 @@ function RoomRow({
             <div className="flex justify-between items-center">
               <div className="flex gap-2 items-center">
                 <span>{u.name}</span>
-                <Dot
-                  width={16}
-                  height={16}
-                  fill={true ? "text-green-500" : "text-gray-400"}
-                ></Dot>
+                <span
+                  className={`w-2 h-2 rounded-full ${isOnline(u._id) ? "bg-green-600 animate-pulse" : "bg-gray-200"}`}
+                ></span>
               </div>
               {lastMessage && lastMessage.createdAt && (
                 <span className="text-sm text-gray-500">
@@ -247,6 +249,7 @@ function ChatList() {
   );
   const { push } = useLocalHistory();
   const { data: session } = useSession();
+  usePresence("global");
 
   function openChat(room: IChatRoomPopulated) {
     push({ name: "chat", params: { id: room._id } });
@@ -280,7 +283,7 @@ function ChatList() {
   );
 }
 
-const Menu: React.FC = () => {
+function Menu() {
   const { push } = useLocalHistory();
   return (
     <div className="space-y-2">
@@ -297,7 +300,7 @@ const Menu: React.FC = () => {
       <ChatList />
     </div>
   );
-};
+}
 
 function ChatRoom() {
   const { current } = useLocalHistory();
@@ -363,6 +366,12 @@ function ChatRoom() {
 
   const [open, setOpen] = useState(false);
 
+  usePresence("global");
+
+  const { presenceData } = usePresenceListener("global");
+  const isOnline = (id: any) =>
+    !!presenceData.find((peer) => peer.clientId === recipientUser?._id);
+
   return (
     <div className="space-y-3">
       <div className="text-sm text-gray-600">
@@ -373,6 +382,9 @@ function ChatRoom() {
           <div className="flex gap-2 items-center">
             <ProfileImage user={recipientUser} />
             <span>{recipientUser.name}</span>
+            <span
+              className={`w-2 h-2 rounded-full ${isOnline(recipientUser._id) ? "bg-green-600 animate-pulse" : "bg-gray-200"}`}
+            ></span>
           </div>
         ) : (
           <div></div>
@@ -574,36 +586,38 @@ const OverlayShell: React.FC<{
 
   return (
     <AblyProvider client={clientRef.current}>
-      <div className="fixed bottom-6 right-6 z-50 flex items-end justify-end pointer-events-none">
-        <div
-          ref={panelRef}
-          role="dialog"
-          className="pointer-events-auto w-96 max-h-[70vh] bg-white rounded-xl shadow-2xl p-4 border ring-1 ring-black/5 overflow-x-hidden min-h-96"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <button
-              className="disabled:text-gray-300 disabled:hover:cursor-default!"
-              disabled={!canGoBack()}
-              onClick={() => pop()}
-            >
-              <ArrowLeft />
-            </button>
-            <button onClick={onClose}>
-              <X />
-            </button>
-          </div>
+      <ChannelProvider channelName="global">
+        <div className="fixed bottom-6 right-6 z-50 flex items-end justify-end pointer-events-none">
+          <div
+            ref={panelRef}
+            role="dialog"
+            className="pointer-events-auto w-96 max-h-[70vh] bg-white rounded-xl shadow-2xl p-4 border ring-1 ring-black/5 overflow-x-hidden min-h-96"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <button
+                className="disabled:text-gray-300 disabled:hover:cursor-default!"
+                disabled={!canGoBack()}
+                onClick={() => pop()}
+              >
+                <ArrowLeft />
+              </button>
+              <button onClick={onClose}>
+                <X />
+              </button>
+            </div>
 
-          <div className="overflow-auto">
-            {current?.name === "menu" && <Menu />}
-            {current?.name === "chat" && (
-              <ChannelProvider channelName={current.params?.id}>
-                <ChatRoom />
-              </ChannelProvider>
-            )}
-            {current?.name === "add" && <AddNewChat />}
+            <div className="overflow-auto">
+              {current?.name === "menu" && <Menu />}
+              {current?.name === "chat" && (
+                <ChannelProvider channelName={current.params?.id}>
+                  <ChatRoom />
+                </ChannelProvider>
+              )}
+              {current?.name === "add" && <AddNewChat />}
+            </div>
           </div>
         </div>
-      </div>
+      </ChannelProvider>
     </AblyProvider>
   );
 };
