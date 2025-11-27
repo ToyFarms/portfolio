@@ -1,34 +1,26 @@
 "use client";
 
-import { projects } from "@/lib/dataSource";
-import { IGalleryImage } from "@/model/Gallery";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { ResolvedProject } from "@/app/api/project/types";
 
 export default function Projects() {
-  const [images, setImages] = useState<{ [key: string]: IGalleryImage }>({});
+  const [projects, setProjects] = useState<ResolvedProject[]>([]);
   useEffect(() => {
-    async function fetchImages() {
-      const imgs: { [key: string]: IGalleryImage } = {};
-      await Promise.all(
-        projects
-          .filter((x) => x.imageKey !== "")
-          .map(async (x) =>
-            fetch(`/api/gallery/tags/${x.imageKey}`).then((res) =>
-              res.json().then((data) => {
-                imgs[x.imageKey] = data.images[0];
-              }),
-            ),
-          ),
-      );
-      setImages(imgs);
+    async function fetchProjects() {
+      const res = await fetch("/api/project");
+      const json: ResolvedProject[] = (await res.json()).projects;
+
+      setProjects(json);
     }
-    fetchImages();
+    fetchProjects();
   }, []);
 
-  if (!images) {
+  if (!projects) {
     return <div></div>;
   }
+
+  console.log(projects)
 
   return (
     <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-6">
@@ -38,14 +30,14 @@ export default function Projects() {
           className="inline-block w-full mb-6 break-inside-avoid overflow-hidden bg-white shadow"
           style={{ breakInside: "avoid" }}
         >
-          <a className="df" href={p.url} target="_blank">
-            {images[p.imageKey] && (
+          <a className="df" href={p.url || "#"} target="_blank">
+            {p.imageResolved && (
               <Image
-                src={images[p.imageKey].url!}
+                src={p.imageResolved.url!}
                 width={0}
                 height={0}
                 className="w-full h-auto object-cover"
-                alt={p.imageKey}
+                alt={p.imageKey || "?"}
                 unoptimized
               />
             )}
