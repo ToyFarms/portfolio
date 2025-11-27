@@ -20,8 +20,6 @@ export default function Projects() {
     return <div></div>;
   }
 
-  console.log(projects)
-
   return (
     <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-6">
       {projects.map((p) => (

@@ -19,8 +19,7 @@ export function formatVariablePrecisionDate(
   input: Date | number,
   opts: Partial<Options> = {},
 ): string {
-  const date =
-    typeof input === "number" ? new Date(input) : input;
+  const date = typeof input === "number" ? new Date(input) : input;
   const now = opts.now ?? new Date();
   const locale = opts.locale;
 
@@ -67,4 +66,11 @@ export function formatVariablePrecisionDate(
     return dateFmtSameYear.format(date);
   }
   return dateFmtWithYear.format(date);
+}
+
+export function formatBytes(bytes?: number) {
+  if (!bytes) return "";
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + " KB";
+  return Math.round(bytes / (1024 * 1024)) + " MB";
 }

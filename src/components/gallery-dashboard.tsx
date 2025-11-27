@@ -1,15 +1,9 @@
 "use client";
 
+import { formatBytes } from "@/lib/utils";
 import { ImageItem } from "@/model/Gallery";
 import { EditIcon, TrashIcon, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
-
-function formatBytes(bytes?: number) {
-  if (!bytes) return "";
-  if (bytes < 1024) return bytes + " B";
-  if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + " KB";
-  return Math.round(bytes / (1024 * 1024)) + " MB";
-}
 
 export default function GalleryDashboard() {
   const [images, setImages] = useState<ImageItem[]>([]);
@@ -164,7 +158,7 @@ export default function GalleryDashboard() {
         <div className="text-sm text-gray-500">{images.length} images</div>
       </div>
 
-      <div className="bg-white shadow-sm rounded-lg p-4 mb-6">
+      <div className="bg-white shadow-sm p-4 mb-6">
         <div className="flex flex-col gap-4">
           <form
             onSubmit={handleUpload}
@@ -184,7 +178,7 @@ export default function GalleryDashboard() {
                   setSelectedFilesCount(f ? f.length : 0);
                 }}
               />
-              <div className="cursor-pointer rounded-md border border-dashed border-gray-300 p-3 text-sm text-gray-600 hover:bg-gray-50">
+              <div className="cursor-pointer border border-dashed border-gray-300 p-3 text-sm text-gray-600 hover:bg-gray-50">
                 {fileNamePreview ? (
                   <div className="truncate">{fileNamePreview}</div>
                 ) : (
@@ -197,7 +191,7 @@ export default function GalleryDashboard() {
               <button
                 type="submit"
                 disabled={uploading}
-                className="px-4 py-2 rounded-md text-sm hover:text-gray-500 outline disabled:opacity-50 truncate whitespace-nowrap"
+                className="px-4 py-2 text-sm hover:text-gray-500 outline disabled:opacity-50 truncate whitespace-nowrap"
               >
                 {uploading
                   ? "Uploading..."
@@ -217,7 +211,7 @@ export default function GalleryDashboard() {
 
       {message && (
         <div
-          className="mb-4 p-3 rounded-md text-sm bg-gray-50 border border-gray-200 flex justify-between items-center"
+          className="mb-4 p-3 text-sm bg-gray-50 border border-gray-200 flex justify-between items-center"
           role="status"
         >
           <div>{message}</div>
@@ -273,14 +267,14 @@ export default function GalleryDashboard() {
                     <button
                       type="button"
                       onClick={() => openEdit(img)}
-                      className="px-2 py-1 text-sm rounded-md border outline-none hover:shadow-sm"
+                      className="px-2 py-1 text-sm border outline-none hover:shadow-sm"
                     >
                       <EditIcon />
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDelete(img._id)}
-                      className="px-2 py-1 text-sm rounded-md border text-red-600 outline-none hover:bg-red-50"
+                      className="px-2 py-1 text-sm border text-red-600 outline-none hover:bg-red-50"
                     >
                       <TrashIcon />
                     </button>
@@ -294,7 +288,7 @@ export default function GalleryDashboard() {
 
       {selected && (
         <div className="fixed inset-0 bg-black/40 z-40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-md shadow-lg w-[600px] max-w-full p-5">
+          <div className="bg-white shadow-lg w-[600px] max-w-full p-5">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">
                 Edit {selected.filename}
@@ -310,7 +304,7 @@ export default function GalleryDashboard() {
 
             <textarea
               rows={6}
-              className="w-full mt-3 p-2 border rounded-md text-sm"
+              className="w-full mt-3 p-2 border text-sm"
               value={editTags}
               onChange={(e) => setEditTags(e.target.value)}
             />
@@ -319,14 +313,14 @@ export default function GalleryDashboard() {
               <button
                 type="button"
                 onClick={() => setSelected(null)}
-                className="px-3 py-1 rounded-md border"
+                className="px-3 py-1 border"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={saveEdit}
-                className="px-3 py-1 rounded-md bg-sky-600 text-white"
+                className="px-3 py-1 bg-sky-600 text-white"
               >
                 Save
               </button>
@@ -365,14 +359,14 @@ function UrlAdder({
         value={val}
         onChange={(e) => setVal(e.target.value)}
         placeholder="https://example.com/image.jpg"
-        className="flex-1 border rounded-md p-2 text-sm"
+        className="flex-1 border p-2 text-sm"
         aria-label="Image URL"
       />
       <button
         type="button"
         onClick={doAdd}
         disabled={disabled || adding}
-        className="px-4 py-2 rounded-md text-sm hover:text-gray-500 outline disabled:opacity-50"
+        className="px-4 py-2 text-sm hover:text-gray-500 outline disabled:opacity-50"
       >
         {adding ? "Adding…" : "Add by URL"}
       </button>
