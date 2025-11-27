@@ -44,6 +44,7 @@ import {
 } from "./ui/dropdown-menu";
 import { formatVariablePrecisionDate } from "@/lib/utils";
 import ProfileImage from "./profile-image";
+import * as Ably from "ably";
 
 type Page = { name: string; params?: Record<string, any> };
 
@@ -151,8 +152,21 @@ export function useLocalHistory() {
 }
 
 function ChatList() {
-  const { data, error, isLoading } = useSWR("/api/chat", (url: string) =>
-    fetch(url).then((res) => res.json()),
+  const { data, error, isLoading } = useSWR(
+    "/api/chat",
+    (url: string) =>
+      fetch(url)
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.error) throw json.error;
+          return json;
+        }),
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      refreshInterval: 0,
+      dedupingInterval: 2000,
+    },
   );
   const { push } = useLocalHistory();
   const { data: session } = useSession();
@@ -162,7 +176,14 @@ function ChatList() {
   }
 
   if (isLoading) return <p>Fetching users...</p>;
-  if (error) return <p>Error loading users</p>;
+  if (error)
+    return (
+      <p>
+        Error loading users
+        <br />
+        <span className="text-center text-red-500">{error}</span>
+      </p>
+    );
 
   const rooms: IChatRoomPopulated[] = data.rooms;
   if (!rooms) {
@@ -251,7 +272,9 @@ const ChatRoom: React.FC = () => {
   const { data: session } = useSession();
   const [recipientUser, setRecipientUser] = useState<IUser>();
   const { pop } = useLocalHistory();
-  const wsRef = useRef<WebSocket>(undefined);
+  // const wsRef = useRef<WebSocket>(undefined);
+  const ablyRef = useRef<Ably.Realtime | null>(null);
+  const channelRef = useRef<Ably.RealtimeChannel | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   async function fetchMessage() {
@@ -275,23 +298,45 @@ const ChatRoom: React.FC = () => {
   }, [messages.length]);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:3001");
-    wsRef.current = ws;
+    const roomId = current?.params?.id;
+    if (!roomId) return;
 
-    ws.addEventListener("message", (ev) => {
-      const data: { chatroomId: string; msg: IChatMessage } = JSON.parse(
-        ev.data,
-      );
+    let mounted = true;
 
-      if (data.chatroomId === current?.params?.id) {
-        setMessages((m) => [...m, data.msg]);
-      }
+    const realtime = new Ably.Realtime({
+      authUrl: "/api/chat/ably/token-request",
     });
-    return () => {
-      ws.close();
-      wsRef.current = undefined;
+    ablyRef.current = realtime;
+
+    const channelName = `chatroom:${current.params?.id}`;
+    const channel = realtime.channels.get(channelName);
+    channelRef.current = channel;
+
+    const onMessage = (msg: any) => {
+      if (!mounted) return;
+      const incoming: IChatMessage = msg.data.msg;
+      setMessages((m) => [...m, incoming]);
     };
-  }, []);
+
+    channel.subscribe("message", onMessage);
+
+    return () => {
+      mounted = false;
+
+      if (channelRef.current) {
+        try {
+          channelRef.current.unsubscribe(onMessage);
+        } catch (e) {}
+      }
+      if (ablyRef.current) {
+        try {
+          ablyRef.current.close();
+        } catch (e) {}
+      }
+      ablyRef.current = null;
+      channelRef.current = null;
+    };
+  }, [current?.params?.id]);
 
   useEffect(() => {
     if (!current?.params?.id) return;
@@ -312,13 +357,11 @@ const ChatRoom: React.FC = () => {
         }),
       });
       const room = (await res.json()).room as IChatRoom;
+      const msg = room.messages[room.messages.length - 1];
 
-      wsRef.current?.send(
-        JSON.stringify({
-          chatroomId: current?.params?.id,
-          msg: room.messages[room.messages.length - 1],
-        }),
-      );
+      channelRef.current?.publish("message", {
+        msg,
+      });
 
       if (inputRef.current) inputRef.current.value = "";
     } catch (err) {
