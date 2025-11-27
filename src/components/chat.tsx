@@ -45,6 +45,8 @@ import {
 import { formatVariablePrecisionDate } from "@/lib/utils";
 import ProfileImage from "./profile-image";
 import * as Ably from "ably";
+import { useAblyChannel } from "@/hooks/useAblyChannel";
+import { AblyProvider } from "@/hooks/useAbly";
 
 type Page = { name: string; params?: Record<string, any> };
 
@@ -272,9 +274,13 @@ const ChatRoom: React.FC = () => {
   const { data: session } = useSession();
   const [recipientUser, setRecipientUser] = useState<IUser>();
   const { pop } = useLocalHistory();
-  // const wsRef = useRef<WebSocket>(undefined);
-  const ablyRef = useRef<Ably.Realtime | null>(null);
-  const channelRef = useRef<Ably.RealtimeChannel | null>(null);
+  const { send, subscribe, unsubscribe } = useAblyChannel<IChatMessage>({
+    channelName: `chatroom:${current.params?.id}`,
+    event: "message",
+    onMessage: (msg) => {
+      setMessages((prev) => [...prev, msg]);
+    },
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   async function fetchMessage() {
@@ -298,47 +304,6 @@ const ChatRoom: React.FC = () => {
   }, [messages.length]);
 
   useEffect(() => {
-    const roomId = current?.params?.id;
-    if (!roomId) return;
-
-    let mounted = true;
-
-    const realtime = new Ably.Realtime({
-      authUrl: "/api/chat/ably/token-request",
-    });
-    ablyRef.current = realtime;
-
-    const channelName = `chatroom:${current.params?.id}`;
-    const channel = realtime.channels.get(channelName);
-    channelRef.current = channel;
-
-    const onMessage = (msg: any) => {
-      if (!mounted) return;
-      const incoming: IChatMessage = msg.data.msg;
-      setMessages((m) => [...m, incoming]);
-    };
-
-    channel.subscribe("message", onMessage);
-
-    return () => {
-      mounted = false;
-
-      if (channelRef.current) {
-        try {
-          channelRef.current.unsubscribe(onMessage);
-        } catch (e) {}
-      }
-      if (ablyRef.current) {
-        try {
-          ablyRef.current.close();
-        } catch (e) {}
-      }
-      ablyRef.current = null;
-      channelRef.current = null;
-    };
-  }, [current?.params?.id]);
-
-  useEffect(() => {
     if (!current?.params?.id) return;
     fetchMessage();
   }, [current?.params?.id]);
@@ -359,9 +324,7 @@ const ChatRoom: React.FC = () => {
       const room = (await res.json()).room as IChatRoom;
       const msg = room.messages[room.messages.length - 1];
 
-      channelRef.current?.publish("message", {
-        msg,
-      });
+      send(msg);
 
       if (inputRef.current) inputRef.current.value = "";
     } catch (err) {
@@ -626,14 +589,16 @@ export default function Chat() {
 
       {mounted && open
         ? createPortal(
-            <LocalHistoryProvider
-              initial={[{ name: "menu" }]}
-              syncWithBrowser={true}
-            >
-              <SessionProvider>
-                <OverlayShell onClose={closeOverlay} openerRef={openerRef} />
-              </SessionProvider>
-            </LocalHistoryProvider>,
+            <AblyProvider>
+              <LocalHistoryProvider
+                initial={[{ name: "menu" }]}
+                syncWithBrowser={true}
+              >
+                <SessionProvider>
+                  <OverlayShell onClose={closeOverlay} openerRef={openerRef} />
+                </SessionProvider>
+              </LocalHistoryProvider>
+            </AblyProvider>,
             document.body,
           )
         : null}
