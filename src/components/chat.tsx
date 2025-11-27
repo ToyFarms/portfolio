@@ -3,6 +3,7 @@
 import { IUser } from "@/model/User";
 import {
   ArrowLeft,
+  Dot,
   Ellipsis,
   MessageCircleIcon,
   Plus,
@@ -45,8 +46,13 @@ import {
 import { formatVariablePrecisionDate } from "@/lib/utils";
 import ProfileImage from "./profile-image";
 import * as Ably from "ably";
-import { useAblyChannel } from "@/hooks/useAblyChannel";
-import { AblyProvider } from "@/hooks/useAbly";
+import {
+  AblyProvider,
+  ChannelProvider,
+  useChannel,
+  usePresence,
+  usePresenceListener,
+} from "ably/react";
 
 type Page = { name: string; params?: Record<string, any> };
 
@@ -153,15 +159,84 @@ export function useLocalHistory() {
   return ctx;
 }
 
+function RoomRow({
+  room,
+  currentUserName,
+  onOpen,
+}: {
+  room: IChatRoomPopulated;
+  currentUserName?: string | null;
+  onOpen: (room: IChatRoomPopulated) => void;
+}) {
+  const initialLast =
+    room.messages.length > 0 ? room.messages[room.messages.length - 1] : null;
+
+  const [lastMessage, setLastMessage] = useState<IChatMessage | null>(
+    initialLast,
+  );
+
+  useChannel((room._id as any).toString(), (msg) => {
+    setLastMessage(msg.data);
+  });
+
+  const otherParticipants = room.participants.filter(
+    (p) => p.name !== currentUserName,
+  );
+
+  return (
+    <button
+      className="px-3 py-2 border flex items-center gap-2 hover:bg-gray-200"
+      onClick={() => onOpen(room)}
+      key={(room._id as any).toString()}
+    >
+      {otherParticipants.map((u: IUser) => (
+        <div
+          key={(u._id as any).toString()}
+          className="flex gap-2 items-center overflow-x-hidden grow-1"
+        >
+          <ProfileImage user={u} />
+          <div className="flex flex-col text-left grow-1">
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2 items-center">
+                <span>{u.name}</span>
+                <Dot
+                  width={16}
+                  height={16}
+                  fill={true ? "text-green-500" : "text-gray-400"}
+                ></Dot>
+              </div>
+              {lastMessage && lastMessage.createdAt && (
+                <span className="text-sm text-gray-500">
+                  {formatVariablePrecisionDate(new Date(lastMessage.createdAt))}
+                </span>
+              )}
+            </div>
+
+            {lastMessage && (
+              <span className="text-sm text-gray-500 whitespace-nowrap text-ellipsis">
+                <span>{room.participants[lastMessage.sender].name}: </span>
+                <span className="truncate inline-block max-w-[200px] align-bottom">
+                  {lastMessage.content}
+                </span>
+              </span>
+            )}
+          </div>
+        </div>
+      ))}
+    </button>
+  );
+}
+
 function ChatList() {
-  const { data, error, isLoading } = useSWR(
+  const [rooms, setRooms] = React.useState<IChatRoomPopulated[]>([]);
+  const { error, isLoading } = useSWR(
     "/api/chat",
     (url: string) =>
       fetch(url)
         .then((res) => res.json())
         .then((json) => {
           if (json.error) throw json.error;
-          return json;
+          setRooms(json.rooms);
         }),
     {
       revalidateOnFocus: false,
@@ -183,66 +258,24 @@ function ChatList() {
       <p>
         Error loading users
         <br />
-        <span className="text-center text-red-500">{error}</span>
+        <span className="text-center text-red-500">{String(error)}</span>
       </p>
     );
 
-  const rooms: IChatRoomPopulated[] = data.rooms;
-  if (!rooms) {
-    return <p>Something went wrong</p>;
-  }
-
   return (
     <div className="flex flex-col gap-2">
-      {rooms.map((r) => {
-        return (
-          <button
-            key={(r._id as any).toString()}
-            className="px-3 py-2 border flex items-center gap-2 hover:bg-gray-200"
-            onClick={() => openChat(r)}
-          >
-            {r.participants
-              .filter((x) => x.name !== session?.user.name)
-              .map((u) => (
-                <div
-                  key={(u._id as any).toString()}
-                  className="flex gap-2 items-center overflow-x-hidden grow-1"
-                >
-                  <ProfileImage user={u} />
-                  <div className="flex flex-col text-left grow-1">
-                    <div className="flex justify-between items-center">
-                      <span>{u.name}</span>
-                      {r.messages.length !== 0 && (
-                        <span className="text-sm text-gray-500">
-                          {formatVariablePrecisionDate(
-                            new Date(
-                              r.messages[r.messages.length - 1].createdAt!,
-                            ),
-                          )}
-                        </span>
-                      )}
-                    </div>
-                    {r.messages.length !== 0 && (
-                      <span className="text-sm text-gray-500 whitespace-nowrap text-ellipsis">
-                        <span>
-                          {
-                            r.participants[
-                              r.messages[r.messages.length - 1].sender
-                            ].name
-                          }
-                          :{" "}
-                        </span>
-                        <span className="truncate inline-block max-w-[200px] align-bottom">
-                          {r.messages[r.messages.length - 1].content}
-                        </span>
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-          </button>
-        );
-      })}
+      {rooms.map((r) => (
+        <ChannelProvider
+          channelName={(r._id as any).toString()}
+          key={(r._id as any).toString()}
+        >
+          <RoomRow
+            room={r}
+            currentUserName={session?.user.name}
+            onOpen={openChat}
+          />
+        </ChannelProvider>
+      ))}
     </div>
   );
 }
@@ -266,7 +299,7 @@ const Menu: React.FC = () => {
   );
 };
 
-const ChatRoom: React.FC = () => {
+function ChatRoom() {
   const { current } = useLocalHistory();
   const inputRef = useRef<HTMLInputElement>(null);
   const [participants, setParticipants] = useState<IUser[]>([]);
@@ -274,12 +307,8 @@ const ChatRoom: React.FC = () => {
   const { data: session } = useSession();
   const [recipientUser, setRecipientUser] = useState<IUser>();
   const { pop } = useLocalHistory();
-  const { send, subscribe, unsubscribe } = useAblyChannel<IChatMessage>({
-    channelName: `chatroom:${current.params?.id}`,
-    event: "message",
-    onMessage: (msg) => {
-      setMessages((prev) => [...prev, msg]);
-    },
+  const { channel } = useChannel(`${current.params?.id}`, (msg) => {
+    setMessages((prev) => [...prev, msg.data]);
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -299,7 +328,7 @@ const ChatRoom: React.FC = () => {
 
   useLayoutEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      messagesEndRef.current.scrollIntoView({ behavior: "instant" });
     }
   }, [messages.length]);
 
@@ -324,7 +353,7 @@ const ChatRoom: React.FC = () => {
       const room = (await res.json()).room as IChatRoom;
       const msg = room.messages[room.messages.length - 1];
 
-      send(msg);
+      channel.publish("messages", msg);
 
       if (inputRef.current) inputRef.current.value = "";
     } catch (err) {
@@ -456,7 +485,7 @@ const ChatRoom: React.FC = () => {
       </div>
     </div>
   );
-};
+}
 
 function AddNewChat() {
   const { data, error, isLoading } = useSWR(
@@ -514,6 +543,22 @@ const OverlayShell: React.FC<{
 }> = ({ onClose }) => {
   const { current, pop, canGoBack } = useLocalHistory();
   const panelRef = useRef<HTMLDivElement | null>(null);
+  const clientRef = useRef<Ably.Realtime | null>(null);
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    if (!session?.user.id) {
+      return;
+    }
+
+    if (!clientRef.current) {
+      console.log(session.user.id);
+      clientRef.current = new Ably.Realtime({
+        authUrl: `/api/chat/ably/token-request`,
+        clientId: session?.user.id,
+      });
+    }
+  }, [session?.user.id]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -523,33 +568,43 @@ const OverlayShell: React.FC<{
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  return (
-    <div className="fixed bottom-6 right-6 z-50 flex items-end justify-end pointer-events-none">
-      <div
-        ref={panelRef}
-        role="dialog"
-        className="pointer-events-auto w-96 max-h-[70vh] bg-white rounded-xl shadow-2xl p-4 border ring-1 ring-black/5 overflow-x-hidden min-h-96"
-      >
-        <div className="flex items-center justify-between mb-3">
-          <button
-            className="disabled:text-gray-300 disabled:hover:cursor-default!"
-            disabled={!canGoBack()}
-            onClick={() => pop()}
-          >
-            <ArrowLeft />
-          </button>
-          <button onClick={onClose}>
-            <X />
-          </button>
-        </div>
+  if (!clientRef.current) {
+    return <p>Connecting to server...</p>;
+  }
 
-        <div className="overflow-auto">
-          {current?.name === "menu" && <Menu />}
-          {current?.name === "chat" && <ChatRoom />}
-          {current?.name === "add" && <AddNewChat />}
+  return (
+    <AblyProvider client={clientRef.current}>
+      <div className="fixed bottom-6 right-6 z-50 flex items-end justify-end pointer-events-none">
+        <div
+          ref={panelRef}
+          role="dialog"
+          className="pointer-events-auto w-96 max-h-[70vh] bg-white rounded-xl shadow-2xl p-4 border ring-1 ring-black/5 overflow-x-hidden min-h-96"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <button
+              className="disabled:text-gray-300 disabled:hover:cursor-default!"
+              disabled={!canGoBack()}
+              onClick={() => pop()}
+            >
+              <ArrowLeft />
+            </button>
+            <button onClick={onClose}>
+              <X />
+            </button>
+          </div>
+
+          <div className="overflow-auto">
+            {current?.name === "menu" && <Menu />}
+            {current?.name === "chat" && (
+              <ChannelProvider channelName={current.params?.id}>
+                <ChatRoom />
+              </ChannelProvider>
+            )}
+            {current?.name === "add" && <AddNewChat />}
+          </div>
         </div>
       </div>
-    </div>
+    </AblyProvider>
   );
 };
 
@@ -589,16 +644,14 @@ export default function Chat() {
 
       {mounted && open
         ? createPortal(
-            <AblyProvider>
-              <LocalHistoryProvider
-                initial={[{ name: "menu" }]}
-                syncWithBrowser={true}
-              >
-                <SessionProvider>
-                  <OverlayShell onClose={closeOverlay} openerRef={openerRef} />
-                </SessionProvider>
-              </LocalHistoryProvider>
-            </AblyProvider>,
+            <LocalHistoryProvider
+              initial={[{ name: "menu" }]}
+              syncWithBrowser={true}
+            >
+              <SessionProvider>
+                <OverlayShell onClose={closeOverlay} openerRef={openerRef} />
+              </SessionProvider>
+            </LocalHistoryProvider>,
             document.body,
           )
         : null}

@@ -5,9 +5,12 @@ async function createTokenRequest(clientId?: string) {
   return ablyRest.auth.createTokenRequest(clientId ? { clientId } : undefined);
 }
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const tokenReq = await createTokenRequest(undefined);
+    const url = new URL(req.url);
+    const id = url.searchParams.get("clientId");
+
+    const tokenReq = await createTokenRequest(id!);
     return NextResponse.json(tokenReq);
   } catch (err) {
     console.error("TokenRequest GET failed", err);
@@ -20,9 +23,10 @@ export async function GET(_req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json().catch(() => ({}));
-    const clientId = body?.id;
-    const tokenReq = await createTokenRequest(clientId);
+    const url = new URL(req.url);
+    const id = url.searchParams.get("clientId");
+
+    const tokenReq = await createTokenRequest(id!);
     return NextResponse.json(tokenReq);
   } catch (err) {
     console.error("TokenRequest POST failed", err);
